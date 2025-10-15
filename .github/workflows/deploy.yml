@@ -39,19 +39,12 @@ jobs:
       # 配置 Wrangler (替换占位符)
       - name: Configure Wrangler
         run: |
-          sed -i "s/\\${D1_DATABASE_ID}/${D1_DATABASE_ID}/g" wrangler.toml
-          sed -i "s/\\${D1_DATABASE_NAME}/${D1_DATABASE_NAME}/g" wrangler.toml
-          sed -i "s/\\${EMAIL_DOMAIN}/${EMAIL_DOMAIN}/g" wrangler.toml
-          sed -i "s/\\${COOKIES_SECRET}/${COOKIES_SECRET}/g" wrangler.toml
-          sed -i "s/\\${TURNSTILE_KEY}/${TURNSTILE_KEY}/g" wrangler.toml
-          sed -i "s/\\${TURNSTILE_SECRET}/${TURNSTILE_SECRET}/g" wrangler.toml
-        env:
-          D1_DATABASE_ID: ${{ secrets.D1_DATABASE_ID }}
-          D1_DATABASE_NAME: ${{ secrets.D1_DATABASE_NAME }}
-          EMAIL_DOMAIN: ${{ secrets.EMAIL_DOMAIN }}
-          COOKIES_SECRET: ${{ secrets.COOKIES_SECRET }}
-          TURNSTILE_KEY: ${{ secrets.TURNSTILE_KEY }}
-          TURNSTILE_SECRET: ${{ secrets.TURNSTILE_SECRET }}
+          sed -i "s|\\${D1_DATABASE_ID}|${{ secrets.D1_DATABASE_ID }}|g" wrangler.toml
+          sed -i "s|\\${D1_DATABASE_NAME}|${{ secrets.D1_DATABASE_NAME }}|g" wrangler.toml
+          sed -i "s|\\${EMAIL_DOMAIN}|${{ secrets.EMAIL_DOMAIN }}|g" wrangler.toml
+          sed -i "s|\\${COOKIES_SECRET}|${{ secrets.COOKIES_SECRET }}|g" wrangler.toml
+          sed -i "s|\\${TURNSTILE_KEY}|${{ secrets.TURNSTILE_KEY }}|g" wrangler.toml
+          sed -i "s|\\${TURNSTILE_SECRET}|${{ secrets.TURNSTILE_SECRET }}|g" wrangler.toml
 
       # 检查 Cloudflare 密钥是否存在
       - name: Check for Cloudflare credentials
