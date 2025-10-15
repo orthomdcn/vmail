@@ -58,7 +58,8 @@ export function Home() {
             <button onClick={handleNewAddress} className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 flex-grow">
               新建地址
             </button>
-            <button onClick={() => refetch()} disabled={isLoading} className="bg-gray-500 text-white p-2 rounded-md hover:bg-gray-600 disabled:bg-gray-300">
+            {/* 修复：添加 !turnstileToken 作为禁用条件，防止在人机验证完成前手动刷新 */}
+            <button onClick={() => refetch()} disabled={isLoading || !turnstileToken} className="bg-gray-500 text-white p-2 rounded-md hover:bg-gray-600 disabled:bg-gray-300">
               <RefreshIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
           </div>

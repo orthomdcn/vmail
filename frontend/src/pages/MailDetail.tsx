@@ -43,11 +43,14 @@ export function MailDetail() {
           </p>
         </div>
         <div className="p-4">
-          {/* 使用 iframe 来安全地沙箱化邮件内容 */}
+          {/* 修复：为 iframe 添加 'allow-scripts' 权限以解决沙箱错误。
+            安全警告：允许脚本可能会使应用受到恶意邮件内容的攻击。
+            生产环境中强烈建议在服务器端对 HTML 进行清理。
+          */}
           <iframe
             src={createMarkup(email.html || `<p>${email.text}</p>`)}
             className="w-full h-[60vh]"
-            sandbox="allow-popups allow-popups-to-escape-sandbox"
+            sandbox="allow-popups allow-popups-to-escape-sandbox allow-scripts"
             title="Email Content"
           />
         </div>
