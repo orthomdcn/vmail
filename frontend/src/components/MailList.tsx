@@ -9,22 +9,22 @@ import type { Email } from 'database';
 import MailIcon from './icons/MailIcon.tsx';
 import RefreshIcon from './icons/RefreshIcon.tsx';
 import Loader from './icons/Loader.tsx';
-// fix: 修复因错误的导入方式导致的构建失败问题
 import { WaitingEmail } from './icons/waiting-email.tsx';
 import { TrashIcon } from './icons/TrashIcon.tsx';
 
 interface MailListProps {
   emails: Email[];
   isLoading: boolean;
+  isFetching: boolean;
   onDelete: (ids: string[]) => void;
   isDeleting: boolean;
   onRefresh: () => void;
   selectedIds: string[];
   setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>;
-  isAddressCreated: boolean; // 新增：用于判断是否已创建邮箱
+  isAddressCreated: boolean;
 }
 
-export function MailList({ emails, isLoading, onDelete, isDeleting, onRefresh, selectedIds, setSelectedIds, isAddressCreated }: MailListProps) {
+export function MailList({ emails, isLoading, isFetching, onDelete, isDeleting, onRefresh, selectedIds, setSelectedIds, isAddressCreated }: MailListProps) {
   const { t } = useTranslation();
 
   const handleSelect = (id: string) => {
@@ -58,14 +58,13 @@ export function MailList({ emails, isLoading, onDelete, isDeleting, onRefresh, s
         
         {/* 操作按钮区域 */}
         <div className="ml-auto flex items-center gap-2">
-            {/* fix: 仅当有邮件时才显示全选和删除按钮 */}
             {isAddressCreated && emails.length > 0 && (
               <>
                 <input
                   type="checkbox"
                   className="h-4 w-4 rounded bg-zinc-700 border-zinc-600 text-cyan-600 focus:ring-cyan-500"
                   title='全选'
-                  checked={selectedIds.length === emails.length}
+                  checked={selectedIds.length === emails.length && emails.length > 0}
                   onChange={handleSelectAll}
                 />
                 <button
@@ -82,9 +81,9 @@ export function MailList({ emails, isLoading, onDelete, isDeleting, onRefresh, s
               className="p-1 rounded"
               title="refresh"
               onClick={onRefresh}>
-              {/* fix: 仅在创建邮箱后且加载中才显示旋转动画 */}
+              {/* fix: 使用 isFetching 控制旋转动画，确保所有加载状态都正确显示 */}
               <RefreshIcon
-                className={clsx("size-6", isAddressCreated && isLoading && "animate-spin")}
+                className={clsx("size-6", isAddressCreated && isFetching && "animate-spin")}
               />
             </button>
         </div>
@@ -93,19 +92,25 @@ export function MailList({ emails, isLoading, onDelete, isDeleting, onRefresh, s
       {/* 邮件列表主体 */}
       <div className="grids flex flex-col flex-1 h-[488px] overflow-y-auto p-2">
         {!isAddressCreated ? (
-          // 未创建邮箱时的静态提示
+          // 状态 1: 未创建邮箱
           <div className="w-full items-center h-full flex-col justify-center flex">
             <WaitingEmail />
             <p className="text-zinc-400 mt-6">请先创建一个临时邮箱地址</p>
           </div>
-        ) : (isLoading || emails.length === 0) ? (
-          // 已创建邮箱但正在加载或邮箱为空
+        ) : isLoading ? (
+          // 状态 2: 已创建邮箱，正在初始加载
           <div className="w-full items-center h-full flex-col justify-center flex">
             <Loader />
             <p className="text-zinc-400 mt-6">{t("Waiting for emails...")}</p>
           </div>
+        ) : emails.length === 0 ? (
+          // 状态 3: 已创建邮箱，但收件箱为空
+          <div className="w-full items-center h-full flex-col justify-center flex">
+            <WaitingEmail />
+            <p className="text-zinc-400 mt-6">{t("Waiting for emails...")}</p>
+          </div>
         ) : (
-          // 显示邮件列表
+          // 状态 4: 显示邮件列表
           emails.map((email: Email) => (
             <div key={email.id} className="flex items-center gap-2 mb-1">
               <input

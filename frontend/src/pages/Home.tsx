@@ -37,7 +37,8 @@ export function Home() {
   }, []);
 
   // 使用 React Query 获取邮件列表
-  const { data: emails = [], isLoading, refetch } = useQuery<Email[]>({
+  // fix: 引入 isFetching 状态以正确反映后台刷新
+  const { data: emails = [], isLoading, isFetching, refetch } = useQuery<Email[]>({
     queryKey: ['emails', address],
     queryFn: () => getEmails(address!, turnstileToken),
     enabled: !!address && !!turnstileToken, // 只有当地址和人机验证token都存在时才执行
@@ -134,11 +135,11 @@ export function Home() {
 
       {/* 右侧邮件列表 */}
       <div className="w-full flex-1 overflow-hidden">
-        {/* feat: 传递 isAddressCreated 属性以优化初始UI状态 */}
         <MailList
           isAddressCreated={!!address}
           emails={emails}
           isLoading={isLoading}
+          isFetching={isFetching}
           onDelete={handleDeleteEmails}
           isDeleting={deleteMutation.isPending}
           onRefresh={refetch}
