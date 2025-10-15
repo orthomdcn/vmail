@@ -37,8 +37,8 @@ export function CopyButton({ text, className }: CopyButtonProps) {
       onClick={handleCopy}
       // 使用 clsx 合并基础样式和传入的 className
       className={clsx(
-        // fix: 移除默认背景和内边距，使其更灵活地继承父组件样式
-        "focus:outline-none focus:ring-2 focus:ring-gray-400",
+        // fix: 移除了点击(聚焦)时的边框样式
+        "focus:outline-none",
         className
       )}
       aria-label="Copy to clipboard"
