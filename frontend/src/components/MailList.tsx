@@ -2,12 +2,15 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import clsx from 'clsx';
 import type { Email } from 'database';
 
 // 图标导入
 import MailIcon from './icons/MailIcon.tsx';
 import RefreshIcon from './icons/RefreshIcon.tsx';
 import Loader from './icons/Loader.tsx';
+// fix: 修复因错误的导入方式导致的构建失败问题
+import { WaitingEmail } from './icons/waiting-email.tsx';
 import { TrashIcon } from './icons/TrashIcon.tsx';
 
 interface MailListProps {
@@ -18,9 +21,10 @@ interface MailListProps {
   onRefresh: () => void;
   selectedIds: string[];
   setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>;
+  isAddressCreated: boolean; // 新增：用于判断是否已创建邮箱
 }
 
-export function MailList({ emails, isLoading, onDelete, isDeleting, onRefresh, selectedIds, setSelectedIds }: MailListProps) {
+export function MailList({ emails, isLoading, onDelete, isDeleting, onRefresh, selectedIds, setSelectedIds, isAddressCreated }: MailListProps) {
   const { t } = useTranslation();
 
   const handleSelect = (id: string) => {
@@ -45,7 +49,7 @@ export function MailList({ emails, isLoading, onDelete, isDeleting, onRefresh, s
         <div className="flex items-center justify-start gap-2 font-bold">
           <MailIcon className="size-6" />
           {t("INBOX")}
-          {emails.length > 0 && (
+          {isAddressCreated && emails.length > 0 && (
             <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-zinc-600 rounded-full">
               {emails.length}
             </span>
@@ -55,7 +59,7 @@ export function MailList({ emails, isLoading, onDelete, isDeleting, onRefresh, s
         {/* 操作按钮区域 */}
         <div className="ml-auto flex items-center gap-2">
             {/* fix: 仅当有邮件时才显示全选和删除按钮 */}
-            {emails.length > 0 && (
+            {isAddressCreated && emails.length > 0 && (
               <>
                 <input
                   type="checkbox"
@@ -78,9 +82,9 @@ export function MailList({ emails, isLoading, onDelete, isDeleting, onRefresh, s
               className="p-1 rounded"
               title="refresh"
               onClick={onRefresh}>
-              {/* fix: 为刷新图标添加持续旋转动画 */}
+              {/* fix: 仅在创建邮箱后且加载中才显示旋转动画 */}
               <RefreshIcon
-                className={"animate-spin size-6"}
+                className={clsx("size-6", isAddressCreated && isLoading && "animate-spin")}
               />
             </button>
         </div>
@@ -88,50 +92,53 @@ export function MailList({ emails, isLoading, onDelete, isDeleting, onRefresh, s
 
       {/* 邮件列表主体 */}
       <div className="grids flex flex-col flex-1 h-[488px] overflow-y-auto p-2">
-        {isLoading && (
+        {!isAddressCreated ? (
+          // 未创建邮箱时的静态提示
+          <div className="w-full items-center h-full flex-col justify-center flex">
+            <WaitingEmail />
+            <p className="text-zinc-400 mt-6">请先创建一个临时邮箱地址</p>
+          </div>
+        ) : (isLoading || emails.length === 0) ? (
+          // 已创建邮箱但正在加载或邮箱为空
           <div className="w-full items-center h-full flex-col justify-center flex">
             <Loader />
             <p className="text-zinc-400 mt-6">{t("Waiting for emails...")}</p>
           </div>
-        )}
-        {!isLoading && emails.length === 0 && (
-          <div className="w-full items-center h-full flex-col justify-center flex">
-            <Loader />
-            <p className="text-zinc-400 mt-6">{t("Waiting for emails...")}</p>
-          </div>
-        )}
-        {emails.map((email: Email) => (
-          <div key={email.id} className="flex items-center gap-2 mb-1">
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded bg-zinc-700 border-zinc-600 text-cyan-600 focus:ring-cyan-500"
-              checked={selectedIds.includes(email.id)}
-              onChange={() => handleSelect(email.id)}
-            />
-            <Link
-              to={`/mails/${email.id}`}
-              className="flex-1 flex flex-col items-start gap-2 rounded-lg border border-zinc-600 p-3 text-left text-sm transition-all hover:bg-zinc-700"
-            >
-              <div className="flex w-full flex-col gap-1">
-                <div className="flex items-center">
-                  <div className="flex items-center gap-2">
-                    <div className="font-semibold">{email.from?.name || email.messageFrom}</div>
+        ) : (
+          // 显示邮件列表
+          emails.map((email: Email) => (
+            <div key={email.id} className="flex items-center gap-2 mb-1">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded bg-zinc-700 border-zinc-600 text-cyan-600 focus:ring-cyan-500"
+                checked={selectedIds.includes(email.id)}
+                onChange={() => handleSelect(email.id)}
+              />
+              <Link
+                to={`/mails/${email.id}`}
+                className="flex-1 flex flex-col items-start gap-2 rounded-lg border border-zinc-600 p-3 text-left text-sm transition-all hover:bg-zinc-700"
+              >
+                <div className="flex w-full flex-col gap-1">
+                  <div className="flex items-center">
+                    <div className="flex items-center gap-2">
+                      <div className="font-semibold">{email.from?.name || email.messageFrom}</div>
+                    </div>
+                    <div className={"ml-auto text-xs"}>
+                      {formatDistanceToNow(new Date(email.date || email.createdAt), {
+                        addSuffix: true,
+                        locale: zhCN,
+                      })}
+                    </div>
                   </div>
-                  <div className={"ml-auto text-xs"}>
-                    {formatDistanceToNow(new Date(email.date || email.createdAt), {
-                      addSuffix: true,
-                      locale: zhCN,
-                    })}
-                  </div>
+                  <div className="text-xs font-medium">{email.subject}</div>
                 </div>
-                <div className="text-xs font-medium">{email.subject}</div>
-              </div>
-              <div className="line-clamp-2 text-xs text-zinc-300 font-normal w-full">
-                {(email.text || email.html || "").substring(0, 300)}
-              </div>
-            </Link>
-          </div>
-        ))}
+                <div className="line-clamp-2 text-xs text-zinc-300 font-normal w-full">
+                  {(email.text || email.html || "").substring(0, 300)}
+                </div>
+              </Link>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

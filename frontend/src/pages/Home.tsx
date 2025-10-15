@@ -74,8 +74,7 @@ export function Home() {
     }
   });
 
-  // feat: 定义 handleDeleteEmails 函数
-  // 修复了点击删除邮件时由于函数未定义而导致的白屏问题。
+  // 定义 handleDeleteEmails 函数
   const handleDeleteEmails = (ids: string[]) => {
     if (ids.length === 0) {
       toast.error('请选择要删除的邮件');
@@ -105,10 +104,8 @@ export function Home() {
         {address ? (
           <div className="w-full md:max-w-[350px] mb-4">
             <div className="mb-4 font-semibold text-sm">{t("Email address")}</div>
-            {/* fix: 调整邮件地址显示框样式以匹配原始设计 */}
             <div className="flex items-center mb-6 text-zinc-100 bg-white/10 backdrop-blur-xl shadow-inner px-4 py-4 rounded-md w-full">
               <span className="truncate">{address}</span>
-              {/* fix: 调整复制按钮样式以匹配原始设计 */}
               <CopyButton text={address} className="p-1 rounded-md ml-auto transition-all duration-200" />
             </div>
             <button
@@ -137,21 +134,17 @@ export function Home() {
 
       {/* 右侧邮件列表 */}
       <div className="w-full flex-1 overflow-hidden">
-        {address ? (
-          <MailList 
-            emails={emails} 
-            isLoading={isLoading} 
-            onDelete={handleDeleteEmails}
-            isDeleting={deleteMutation.isPending}
-            onRefresh={refetch}
-            selectedIds={selectedIds}
-            setSelectedIds={setSelectedIds}
-          />
-        ) : (
-          <div className="text-center p-8 text-white">
-            请先创建一个临时邮箱地址
-          </div>
-        )}
+        {/* feat: 传递 isAddressCreated 属性以优化初始UI状态 */}
+        <MailList
+          isAddressCreated={!!address}
+          emails={emails}
+          isLoading={isLoading}
+          onDelete={handleDeleteEmails}
+          isDeleting={deleteMutation.isPending}
+          onRefresh={refetch}
+          selectedIds={selectedIds}
+          setSelectedIds={setSelectedIds}
+        />
       </div>
     </div>
   );
