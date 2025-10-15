@@ -37,8 +37,8 @@ export function CopyButton({ text, className }: CopyButtonProps) {
       onClick={handleCopy}
       // 使用 clsx 合并基础样式和传入的 className
       className={clsx(
-        // fix: 移除了点击(聚焦)时的边框样式
-        "focus:outline-none",
+        // fix: 彻底移除浏览器在按钮聚焦时默认添加的边框/轮廓
+        "focus:outline-none focus-visible:outline-none",
         className
       )}
       aria-label="Copy to clipboard"
