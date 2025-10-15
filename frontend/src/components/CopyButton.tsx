@@ -37,7 +37,8 @@ export function CopyButton({ text, className }: CopyButtonProps) {
       onClick={handleCopy}
       // 使用 clsx 合并基础样式和传入的 className
       className={clsx(
-        "p-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400",
+        // fix: 移除默认背景和内边距，使其更灵活地继承父组件样式
+        "focus:outline-none focus:ring-2 focus:ring-gray-400",
         className
       )}
       aria-label="Copy to clipboard"
@@ -50,3 +51,4 @@ export function CopyButton({ text, className }: CopyButtonProps) {
     </button>
   );
 }
+

@@ -105,9 +105,11 @@ export function Home() {
         {address ? (
           <div className="w-full md:max-w-[350px] mb-4">
             <div className="mb-4 font-semibold text-sm">{t("Email address")}</div>
+            {/* fix: 调整邮件地址显示框样式以匹配原始设计 */}
             <div className="flex items-center mb-6 text-zinc-100 bg-white/10 backdrop-blur-xl shadow-inner px-4 py-4 rounded-md w-full">
               <span className="truncate">{address}</span>
-              <CopyButton text={address} />
+              {/* fix: 调整复制按钮样式以匹配原始设计 */}
+              <CopyButton text={address} className="p-1 rounded-md ml-auto transition-all duration-200" />
             </div>
             <button
               onClick={handleStopAddress}
@@ -154,3 +156,4 @@ export function Home() {
     </div>
   );
 }
+
