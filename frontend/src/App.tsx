@@ -2,15 +2,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+// 修正导入路径，添加 .tsx 扩展名
 import { Home } from './pages/Home.tsx'; 
 import { MailDetail } from './pages/MailDetail.tsx'; 
-import { ConfigContext, AppConfig } from './hooks/useConfig.ts';
-// 新增：导入刚刚创建的 Layout 组件
-import Layout from './Layout.tsx';
-// 新增：为了完整性，我们创建 About 和 Privacy 页面
-import { About } from './pages/About.tsx';
-import { Privacy } from './pages/Privacy.tsx';
-import { Terms } from './pages/Terms.tsx';
+import { ConfigContext, AppConfig } from './hooks/useConfig.ts'; // 也修正这个
 
 const queryClient = new QueryClient();
 
@@ -26,8 +21,7 @@ function App() {
   }, []);
 
   if (!config) {
-    // 您可以替换成一个更美观的加载动画
-    return <div className="flex justify-center items-center min-h-screen bg-[#1f2023] text-white">加载中...</div>;
+    return <div>加载中...</div>;
   }
 
   return (
@@ -35,15 +29,9 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <Routes>
-            {/* 修复：使用 Layout 组件作为布局路由 */}
-            <Route element={<Layout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/mails/:id" element={<MailDetail />} />
-              {/* 新增：添加 About 和 Privacy 路由 */}
-              <Route path="/about" element={<About />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/terms" element={<Terms />} />
-            </Route>
+            <Route path="/" element={<Home />} />
+            <Route path="/mails/:id" element={<MailDetail />} />
+            {/* 你可以在这里添加更多路由 */}
           </Routes>
         </BrowserRouter>
       </QueryClientProvider>
