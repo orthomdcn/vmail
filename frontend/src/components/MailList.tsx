@@ -54,21 +54,26 @@ export function MailList({ emails, isLoading, onDelete, isDeleting, onRefresh, s
         
         {/* 操作按钮区域 */}
         <div className="ml-auto flex items-center gap-2">
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded bg-zinc-700 border-zinc-600"
-              title='全选'
-              checked={emails.length > 0 && selectedIds.length === emails.length}
-              onChange={handleSelectAll}
-            />
-            <button
-              onClick={() => onDelete(selectedIds)}
-              disabled={selectedIds.length === 0 || isDeleting}
-              className="p-1 rounded text-red-500 disabled:text-gray-500 hover:text-red-400"
-              title="删除选中"
-            >
-              <TrashIcon className="w-5 h-5" />
-            </button>
+            {/* fix: 仅当有邮件时才显示全选和删除按钮 */}
+            {emails.length > 0 && (
+              <>
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded bg-zinc-700 border-zinc-600 text-cyan-600 focus:ring-cyan-500"
+                  title='全选'
+                  checked={selectedIds.length === emails.length}
+                  onChange={handleSelectAll}
+                />
+                <button
+                  onClick={() => onDelete(selectedIds)}
+                  disabled={selectedIds.length === 0 || isDeleting}
+                  className="p-1 rounded text-red-500 disabled:text-gray-500 hover:text-red-400"
+                  title="删除选中"
+                >
+                  <TrashIcon className="w-5 h-5" />
+                </button>
+              </>
+            )}
             <button
               className="p-1 rounded"
               title="refresh"
@@ -99,7 +104,7 @@ export function MailList({ emails, isLoading, onDelete, isDeleting, onRefresh, s
           <div key={email.id} className="flex items-center gap-2 mb-1">
             <input
               type="checkbox"
-              className="h-4 w-4 rounded bg-zinc-700 border-zinc-600"
+              className="h-4 w-4 rounded bg-zinc-700 border-zinc-600 text-cyan-600 focus:ring-cyan-500"
               checked={selectedIds.includes(email.id)}
               onChange={() => handleSelect(email.id)}
             />
@@ -131,3 +136,4 @@ export function MailList({ emails, isLoading, onDelete, isDeleting, onRefresh, s
     </div>
   );
 }
+
