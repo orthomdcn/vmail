@@ -27,22 +27,25 @@ export function Home() {
   const queryClient = useQueryClient();
 
   // 状态管理
-  const [address, setAddress] = useState<string | undefined>(Cookies.get('userMailbox'));
+  // fix: 简化 address state 的初始化
+  const [address, setAddress] = useState<string | undefined>(() => Cookies.get('userMailbox'));
   const [turnstileToken, setTurnstileToken] = useState<string>('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // 从 cookie 中更新地址
-  useEffect(() => {
-    setAddress(Cookies.get('userMailbox'));
-  }, []);
-
   // 使用 React Query 获取邮件列表
-  // fix: 引入 isFetching 状态以正确反映后台刷新
   const { data: emails = [], isLoading, isFetching, refetch } = useQuery<Email[]>({
     queryKey: ['emails', address],
     queryFn: () => getEmails(address!, turnstileToken),
-    enabled: !!address && !!turnstileToken, // 只有当地址和人机验证token都存在时才执行
-    refetchInterval: 20000, // 每20秒自动刷新
+    // fix: 确保在 address 和 turnstileToken 都存在时，查询才被激活
+    enabled: !!address && !!turnstileToken,
+    // fix: 恢复20秒自动刷新
+    refetchInterval: 20000,
+    // 当查询出错时，自动刷新会停止，这里添加错误提示方便调试
+    onError: (err: Error) => {
+      toast.error(`获取邮件失败: ${err.message}`, { duration: 5000 });
+    },
+    // 失败后不自动重试
+    retry: false,
   });
 
   // 创建新邮箱地址的处理函数
@@ -60,6 +63,8 @@ export function Home() {
   const handleStopAddress = () => {
     Cookies.remove('userMailbox');
     setAddress(undefined);
+    // 清理相关的查询缓存
+    queryClient.invalidateQueries({ queryKey: ['emails'] });
   };
 
   // 删除邮件的 useMutation hook
@@ -68,6 +73,7 @@ export function Home() {
     onSuccess: () => {
       toast.success('邮件已删除');
       setSelectedIds([]); // 清空选择
+      // 使邮件列表的查询失效，触发一次刷新
       queryClient.invalidateQueries({ queryKey: ['emails', address] });
     },
     onError: () => {
@@ -107,7 +113,7 @@ export function Home() {
             <div className="mb-4 font-semibold text-sm">{t("Email address")}</div>
             <div className="flex items-center mb-6 text-zinc-100 bg-white/10 backdrop-blur-xl shadow-inner px-4 py-4 rounded-md w-full">
               <span className="truncate">{address}</span>
-              <CopyButton text={address} className="p-1 rounded-md ml-auto transition-all duration-200" />
+              <CopyButton text={address} className="p-1 rounded-md ml-auto" />
             </div>
             <button
               onClick={handleStopAddress}
@@ -138,6 +144,7 @@ export function Home() {
         <MailList
           isAddressCreated={!!address}
           emails={emails}
+          // fix: 传递正确的加载状态
           isLoading={isLoading}
           isFetching={isFetching}
           onDelete={handleDeleteEmails}

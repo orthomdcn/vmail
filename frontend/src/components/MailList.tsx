@@ -42,6 +42,73 @@ export function MailList({ emails, isLoading, isFetching, onDelete, isDeleting, 
     }
   };
 
+  const renderBody = () => {
+    // 状态 1: 还未创建地址
+    if (!isAddressCreated) {
+      return (
+        <div className="w-full items-center h-full flex-col justify-center flex">
+          <WaitingEmail />
+          <p className="text-zinc-400 mt-6">请先创建一个临时邮箱地址</p>
+        </div>
+      );
+    }
+    
+    // 状态 2: 正在进行首次加载
+    if (isLoading) {
+      return (
+        <div className="w-full items-center h-full flex-col justify-center flex">
+          <Loader />
+          <p className="text-zinc-400 mt-6">{t("Waiting for emails...")}</p>
+        </div>
+      );
+    }
+
+    // 状态 3: 收件箱为空
+    if (emails.length === 0) {
+      return (
+        <div className="w-full items-center h-full flex-col justify-center flex">
+          {/* 后台刷新时也显示加载动画，优化体验 */}
+          {isFetching ? <Loader /> : <WaitingEmail />}
+          <p className="text-zinc-400 mt-6">{t("Waiting for emails...")}</p>
+        </div>
+      );
+    }
+
+    // 状态 4: 显示邮件列表
+    return emails.map((email: Email) => (
+      <div key={email.id} className="flex items-center gap-2 mb-1">
+        <input
+          type="checkbox"
+          className="h-4 w-4 rounded bg-zinc-700 border-zinc-600 text-cyan-600 focus:ring-cyan-500"
+          checked={selectedIds.includes(email.id)}
+          onChange={() => handleSelect(email.id)}
+        />
+        <Link
+          to={`/mails/${email.id}`}
+          className="flex-1 flex flex-col items-start gap-2 rounded-lg border border-zinc-600 p-3 text-left text-sm transition-all hover:bg-zinc-700"
+        >
+          <div className="flex w-full flex-col gap-1">
+            <div className="flex items-center">
+              <div className="flex items-center gap-2">
+                <div className="font-semibold">{email.from?.name || email.messageFrom}</div>
+              </div>
+              <div className={"ml-auto text-xs"}>
+                {formatDistanceToNow(new Date(email.date || email.createdAt), {
+                  addSuffix: true,
+                  locale: zhCN,
+                })}
+              </div>
+            </div>
+            <div className="text-xs font-medium">{email.subject}</div>
+          </div>
+          <div className="line-clamp-2 text-xs text-zinc-300 font-normal w-full">
+            {(email.text || email.html || "").substring(0, 300)}
+          </div>
+        </Link>
+      </div>
+    ));
+  }
+
   return (
     <div className="rounded-md border border-cyan-50/20 text-white">
       {/* 邮件列表头部 */}
@@ -80,8 +147,11 @@ export function MailList({ emails, isLoading, isFetching, onDelete, isDeleting, 
             <button
               className="p-1 rounded"
               title="refresh"
-              onClick={onRefresh}>
-              {/* fix: 使用 isFetching 控制旋转动画，确保所有加载状态都正确显示 */}
+              onClick={onRefresh}
+              // fix: 只有在创建地址后，刷新按钮才响应加载状态
+              disabled={!isAddressCreated}
+            >
+              {/* fix: 确保只要在获取数据，图标就旋转 */}
               <RefreshIcon
                 className={clsx("size-6", isAddressCreated && isFetching && "animate-spin")}
               />
@@ -91,59 +161,7 @@ export function MailList({ emails, isLoading, isFetching, onDelete, isDeleting, 
 
       {/* 邮件列表主体 */}
       <div className="grids flex flex-col flex-1 h-[488px] overflow-y-auto p-2">
-        {!isAddressCreated ? (
-          // 状态 1: 未创建邮箱
-          <div className="w-full items-center h-full flex-col justify-center flex">
-            <WaitingEmail />
-            <p className="text-zinc-400 mt-6">请先创建一个临时邮箱地址</p>
-          </div>
-        ) : isLoading ? (
-          // 状态 2: 已创建邮箱，正在初始加载
-          <div className="w-full items-center h-full flex-col justify-center flex">
-            <Loader />
-            <p className="text-zinc-400 mt-6">{t("Waiting for emails...")}</p>
-          </div>
-        ) : emails.length === 0 ? (
-          // 状态 3: 已创建邮箱，但收件箱为空
-          <div className="w-full items-center h-full flex-col justify-center flex">
-            <WaitingEmail />
-            <p className="text-zinc-400 mt-6">{t("Waiting for emails...")}</p>
-          </div>
-        ) : (
-          // 状态 4: 显示邮件列表
-          emails.map((email: Email) => (
-            <div key={email.id} className="flex items-center gap-2 mb-1">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded bg-zinc-700 border-zinc-600 text-cyan-600 focus:ring-cyan-500"
-                checked={selectedIds.includes(email.id)}
-                onChange={() => handleSelect(email.id)}
-              />
-              <Link
-                to={`/mails/${email.id}`}
-                className="flex-1 flex flex-col items-start gap-2 rounded-lg border border-zinc-600 p-3 text-left text-sm transition-all hover:bg-zinc-700"
-              >
-                <div className="flex w-full flex-col gap-1">
-                  <div className="flex items-center">
-                    <div className="flex items-center gap-2">
-                      <div className="font-semibold">{email.from?.name || email.messageFrom}</div>
-                    </div>
-                    <div className={"ml-auto text-xs"}>
-                      {formatDistanceToNow(new Date(email.date || email.createdAt), {
-                        addSuffix: true,
-                        locale: zhCN,
-                      })}
-                    </div>
-                  </div>
-                  <div className="text-xs font-medium">{email.subject}</div>
-                </div>
-                <div className="line-clamp-2 text-xs text-zinc-300 font-normal w-full">
-                  {(email.text || email.html || "").substring(0, 300)}
-                </div>
-              </Link>
-            </div>
-          ))
-        )}
+        {renderBody()}
       </div>
     </div>
   );
