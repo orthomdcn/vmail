@@ -42,8 +42,7 @@ export function MailDetail({ email, onClose }: MailDetailProps) {
       <div className="flex-1 flex text-sm bg-[#ffffffd6] backdrop-blur-xl rounded-md min-h-0">
         <iframe
             srcDoc={email.html || `<pre>${email.text}</pre>`}
-            // fix: 将h-[60vh]修改为h-full，使其填充满父容器
-            className="w-full h-full border-0"
+            className="w-full h-[60vh] border-0"
             sandbox="allow-popups allow-popups-to-escape-sandbox"
             title="Email Content"
           />
