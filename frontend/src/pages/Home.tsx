@@ -7,7 +7,6 @@ import Cookies from 'js-cookie';
 import { Toaster, toast } from 'react-hot-toast';
 
 import { MailList } from '../components/MailList.tsx';
-import { MailDetail } from './MailDetail.tsx'; // 导入邮件详情组件
 import { CopyButton } from '../components/CopyButton.tsx';
 // feat: 导入 loginByPassword
 import { getEmails, deleteEmails, loginByPassword, verifyTurnstile } from '../services/api.ts';
@@ -17,7 +16,7 @@ import { getRandomCharacter, encrypt } from '../lib/utlis.ts';
 
 // feat: 导入密码模态框和相关 hook
 import { usePasswordModal } from '../components/password.tsx';
-import PasswordIcon from '../components/icons/Password.tsx'; 
+import PasswordIcon from '../components/icons/Password.tsx';
 
 // 图标导入
 import ShieldCheck from "../components/icons/ShieldCheck.tsx";
@@ -272,31 +271,31 @@ export function Home() {
       </div>
 
       {/* 右侧邮件列表或邮件详情 */}
+      {/* refactor: 始终渲染 MailList，并通过 selectedEmail prop 控制其内部显示逻辑 */}
       <div className="w-full flex-1 overflow-hidden">
-        {selectedEmail ? (
-          <MailDetail email={selectedEmail} onClose={handleCloseDetail} />
-        ) : (
-          <MailList
-            isAddressCreated={!!address}
-            emails={emails}
-            isLoading={isLoading}
-            isFetching={isFetching}
-            onDelete={handleDeleteEmails}
-            isDeleting={deleteMutation.isPending}
-            onRefresh={refetch}
-            selectedIds={selectedIds}
-            setSelectedIds={setSelectedIds}
-            onSelectEmail={handleSelectEmail} // 传递选择邮件的函数
-            // feat: 传递新状态和回调函数
-            showViewPasswordButton={hasReceivedEmail}
-            onShowPassword={() => {
-              const password = getPassword();
-              if (password) {
-                  showPasswordToast(password);
-              }
-            }}
-          />
-        )}
+        <MailList
+          isAddressCreated={!!address}
+          emails={emails}
+          isLoading={isLoading}
+          isFetching={isFetching}
+          onDelete={handleDeleteEmails}
+          isDeleting={deleteMutation.isPending}
+          onRefresh={refetch}
+          selectedIds={selectedIds}
+          setSelectedIds={setSelectedIds}
+          onSelectEmail={handleSelectEmail} // 传递选择邮件的函数
+          // feat: 传递新状态和回调函数
+          showViewPasswordButton={hasReceivedEmail}
+          onShowPassword={() => {
+            const password = getPassword();
+            if (password) {
+                showPasswordToast(password);
+            }
+          }}
+          // feat: 传递当前选中的邮件和关闭详情页的回调
+          selectedEmail={selectedEmail}
+          onCloseDetail={handleCloseDetail}
+        />
       </div>
     </div>
   );

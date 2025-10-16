@@ -2,8 +2,6 @@ import { useTranslation } from "react-i18next";
 import { format } from "date-fns/format";
 
 // 导入图标
-// 修复：将命名导入更改为默认导入，以匹配图标组件的导出方式
-import ArrowUturnLeft from '../components/icons/ArrowUturnLeft.tsx';
 import UserCircleIcon from '../components/icons/UserCircleIcon.tsx';
 
 import type { Email } from '../database_types'; // 导入 Email 类型
@@ -17,21 +15,11 @@ interface MailDetailProps {
 export function MailDetail({ email, onClose }: MailDetailProps) {
   const { t } = useTranslation();
 
-  // 处理邮件内容的显示，将 HTML 字符串渲染到 iframe 中
-  const createMarkup = (htmlContent: string) => {
-    // 为了安全，最好对 htmlContent 进行清理，这里为了简化直接使用
-    return `data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`;
-  };
-
   return (
-    <div className="flex flex-1 flex-col p-2 gap-10 text-white bg-zinc-800 rounded-md">
-      <button
-        onClick={onClose}
-        className="flex w-fit font-semibold items-center border p-2 rounded-md gap-2">
-        <ArrowUturnLeft />
-        {t("Back Home")}
-      </button>
-      <div className="flex items-start">
+    // refactor: 移除外部的 p-2 gap-10，将其移到 MailList 中控制
+    <div className="flex flex-1 flex-col text-white">
+      {/* refactor: 移除返回按钮，它现在位于 MailList 的标题栏中 */}
+      <div className="flex items-start mb-6">
         <div className="flex items-start gap-4 text-sm">
           <div>
             <UserCircleIcon className="w-6 h-6"/>
@@ -50,7 +38,8 @@ export function MailDetail({ email, onClose }: MailDetailProps) {
           </div>
         )}
       </div>
-      <div className="flex-1 flex text-sm bg-[#ffffffd6] backdrop-blur-xl rounded-md p-3 min-h-0">
+      {/* fix: 调整 iframe 的容器和样式，以适应在 MailList 中显示 */}
+      <div className="flex-1 flex text-sm bg-[#ffffffd6] backdrop-blur-xl rounded-md min-h-0">
         <iframe
             srcDoc={email.html || `<pre>${email.text}</pre>`}
             className="w-full h-[60vh] border-0"
