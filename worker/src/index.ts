@@ -172,14 +172,14 @@ export default {
       // 使用 postal-mime 解析邮件
       const mail = await new PostalMime().parse(raw);
       const now = new Date();
+      // feat: 收到第一封邮件时，使用邮件的唯一ID作为密码
+      const password = mail.messageId ? mail.messageId.split('@')[0].replace(/<|>/g, '') : nanoid();
 
-      // **关键修复**：显式地从解析结果中映射字段，而不是使用对象展开(...)
-      // 这样可以避免属性覆盖和类型不匹配的问题
       const newEmail: InsertEmail = {
-        id: nanoid(),
+        id: password, // 使用处理过的 messageId 或 nanoid 作为密码
         messageFrom: message.from,
         messageTo: message.to,
-        headers: mail.headers || [], // 确保 headers 存在
+        headers: mail.headers || [], 
         from: mail.from,
         sender: mail.sender,
         replyTo: mail.replyTo,
@@ -189,7 +189,7 @@ export default {
         cc: mail.cc,
         bcc: mail.bcc,
         subject: mail.subject,
-        messageId: mail.messageId, // messageId 在数据库中是必需的
+        messageId: mail.messageId, 
         inReplyTo: mail.inReplyTo,
         references: mail.references,
         date: mail.date,
@@ -204,9 +204,6 @@ export default {
       // 插入数据库
       await insertEmail(db, email);
     } catch (e: any) {
-      // **关键修复**：向 Cloudflare 发出拒绝信号
-      // 当发生任何错误时，调用 message.setReject() 告知 Cloudflare 处理失败。
-      // 这会让 Cloudflare 尝试重新投递邮件，而不是直接删除。
       console.error('处理邮件失败:', e);
       message.setReject(`邮件处理失败: ${e.message}`);
     }
