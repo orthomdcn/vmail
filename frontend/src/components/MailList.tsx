@@ -67,8 +67,8 @@ export function MailList({ emails, isLoading, isFetching, onDelete, isDeleting, 
     if (emails.length === 0) {
       return (
         <div className="w-full items-center h-full flex-col justify-center flex">
-          {/* 后台刷新时也显示加载动画，优化体验 */}
-          {isFetching ? <Loader /> : <WaitingEmail />}
+          {/* 修复: 只要地址已创建且邮箱为空，就持续显示加载动画 */}
+          <Loader />
           <p className="text-zinc-400 mt-6">{t("Waiting for emails...")}</p>
         </div>
       );
@@ -151,9 +151,9 @@ export function MailList({ emails, isLoading, isFetching, onDelete, isDeleting, 
               // fix: 只有在创建地址后，刷新按钮才响应加载状态
               disabled={!isAddressCreated}
             >
-              {/* fix: 确保只要在获取数据，图标就旋转 */}
+              {/* 修复：只要正在获取数据或邮箱为空，刷新图标就应该旋转 */}
               <RefreshIcon
-                className={clsx("size-6", isAddressCreated && isFetching && "animate-spin")}
+                className={clsx("size-6", isAddressCreated && (isFetching || emails.length === 0) && "animate-spin")}
               />
             </button>
         </div>
@@ -166,4 +166,3 @@ export function MailList({ emails, isLoading, isFetching, onDelete, isDeleting, 
     </div>
   );
 }
-
