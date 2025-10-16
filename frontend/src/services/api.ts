@@ -1,6 +1,14 @@
+// 导入 Email 类型，'database' 是您 monorepo 中的包名
 import type { Email } from 'database';
 
 const API_BASE_URL = '/api';
+
+// 定义 Turnstile 人机验证所需的 token
+// 恢复此接口定义，以备将来使用
+interface ApiPayload {
+  token: string;
+  [key: string]: any;
+}
 
 // 获取邮件列表
 export async function getEmails(address: string, token: string): Promise<Email[]> {
@@ -11,6 +19,15 @@ export async function getEmails(address: string, token: string): Promise<Email[]
   });
   if (!response.ok) {
     throw new Error('Network response was not ok');
+  }
+  return response.json();
+}
+
+// feat: 添加获取单封邮件详情的函数
+export async function getEmailById(id: string): Promise<Email> {
+  const response = await fetch(`${API_BASE_URL}/emails/${id}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch email');
   }
   return response.json();
 }
