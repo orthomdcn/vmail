@@ -36,5 +36,6 @@
   "Remember your password, otherwise your email will expire and cannot be retrieved": "Lembre-se de sua senha, caso contrário, seu e-mail expirará e não poderá ser recuperado",
   "Enter your password *": "Digite sua senha *",
   "Log out": "Sair",
-  "Terms": "Termos"
+  "Terms": "Termos",
+  "Your login password is": "Sua senha de login é:"
 }

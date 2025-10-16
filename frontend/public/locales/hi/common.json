@@ -36,5 +36,6 @@
   "Remember your password, otherwise your email will expire and cannot be retrieved": "अपना पासवर्ड याद रखें, अन्यथा ваш ईमेल समाप्त हो जाएगा और पुनर्प्राप्त नहीं हो सकता",
   "Enter your password *": "अपना पासवर्ड दर्ज करें *",
   "Log out": "लॉगआउट",
-  "Terms": "नियम"
+  "Terms": "नियम",
+  "Your login password is": "आपका लॉगिन पासवर्ड है:"
 }

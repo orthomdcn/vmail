@@ -36,5 +36,6 @@
   "Remember your password, otherwise your email will expire and cannot be retrieved": "パスワードを忘れると、メールが失効して取り戻せません",
   "Enter your password *": "パスワードを入力してください *",
   "Log out": "ログアウト",
-  "Terms": "条件"
+  "Terms": "条件",
+  "Your login password is": "ログインパスワード："
 }

@@ -36,5 +36,6 @@
   "Remember your password, otherwise your email will expire and cannot be retrieved": "Parolanızı unutmayın, aksi takdirde e-postanız sona erecek ve alınamayacak",
   "Enter your password *": "Parolanızı girin *",
   "Log out": "Çıkış Yap",
-  "Terms": "Şartlar"
+  "Terms": "Şartlar",
+  "Your login password is": "Giriş şifreniz:"
 }
