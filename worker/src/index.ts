@@ -52,17 +52,21 @@ const turnstile = async (c, next) => {
     return c.json({ message: '缺少 turnstile token' }, 400);
   }
 
-  const formData = new FormData();
-  formData.append('secret', c.env.TURNSTILE_SECRET);
-  formData.append('response', token);
-  // 增加判断，仅当 IP 地址存在时才添加到表单数据中
+  // fix: 切换到 application/x-www-form-urlencoded 格式来发送验证请求。
+  // 这可以提高兼容性，并可能解决由 FormData 编码引起的边界问题。
+  const params = new URLSearchParams();
+  params.append('secret', c.env.TURNSTILE_SECRET);
+  params.append('response', token);
   if (ip) {
-      formData.append('remoteip', ip);
+    params.append('remoteip', ip);
   }
 
   const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
     method: 'POST',
-    body: formData,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
   });
 
   const data = await res.json();
