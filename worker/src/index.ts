@@ -2,7 +2,8 @@ import { Hono } from 'hono';
 import { serveStatic } from 'hono/cloudflare-workers';
 import { cors } from 'hono/cors';
 // 路径修正：使用相对路径并导入正确的函数
-import { deleteEmails, findEmailById, getEmailsByMessageTo, insertEmail } from '../../packages/database/dao';
+// feat: 导入 getEmailByPassword 函数
+import { deleteEmails, findEmailById, getEmailByPassword, getEmailsByMessageTo, insertEmail } from '../../packages/database/dao';
 import { getD1DB } from '../../packages/database/db';
 import { InsertEmail, insertEmailSchema } from '../../packages/database/schema';
 import { nanoid } from 'nanoid/non-secure';
@@ -81,6 +82,20 @@ api.post('/delete-emails', turnstile, async (c) => {
     const { ids } = await c.req.json();
     const result = await deleteEmails(db, ids as string[]);
     return c.json(result);
+});
+
+// feat: 添加登录路由
+api.post('/login', turnstile, async (c) => {
+  const db = getD1DB(c.env.DB);
+  const { password } = await c.req.json();
+  if (!password) {
+    return c.json({ message: 'Password is required' }, 400);
+  }
+  const email = await getEmailByPassword(db, password as string);
+  if (!email) {
+    return c.json({ message: 'Invalid password' }, 404);
+  }
+  return c.json({ address: email.messageTo });
 });
 
 
