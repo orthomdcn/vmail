@@ -5,7 +5,8 @@ import {
   useMemo,
   useState,
 } from "react";
-import Modal from "./modal";
+// fix: 使用具名导入来修复构建错误
+import { Modal } from "./modal";
 import { useTranslation } from "react-i18next";
 import Close from "./icons/Close";
 import toast from "react-hot-toast";
