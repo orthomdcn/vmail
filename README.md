@@ -41,7 +41,7 @@
 
 1.  **克隆项目到本地**
     ```bash
-    git clone [https://github.com/oiov/vmail](https://github.com/oiov/vmail)
+    git clone https://github.com/oiov/vmail
     cd vmail
     pnpm install
     ```
