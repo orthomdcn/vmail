@@ -49,7 +49,7 @@ export default function PasswordModal({
 
         <div className="flex flex-col items-center justify-center space-y-3 border-b border-gray-200 px-4 py-5 text-center md:px-16">
           <h3 className="font-display text-2xl font-bold">
-            {t("Login with password")}
+            {t("Save password")}
           </h3>
           <p className="text-gray-500">
             {t("Save your password and continue using this email in 1 day")}
