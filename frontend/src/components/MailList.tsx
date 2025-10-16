@@ -27,7 +27,7 @@ interface MailListProps {
   selectedIds: string[];
   setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>;
   isAddressCreated: boolean;
-  onSelectEmail: (email: Email) => void;
+  onSelectEmail: (email: Email) => void; 
   showViewPasswordButton: boolean;
   onShowPassword: () => void;
   // feat: 新增 props，用于接收当前选中的邮件和关闭详情页的回调
@@ -43,7 +43,7 @@ export function MailList({ emails, isLoading, isFetching, onDelete, isDeleting, 
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
-
+  
   const handleSelectAll = () => {
     if (emails.length === 0) return;
     if (selectedIds.length === emails.length) {
@@ -58,7 +58,7 @@ export function MailList({ emails, isLoading, isFetching, onDelete, isDeleting, 
     if (selectedEmail) {
       return <MailDetail email={selectedEmail} onClose={onCloseDetail} />;
     }
-
+    
     // 状态 1: 还未创建地址
     if (!isAddressCreated) {
       return (
@@ -68,7 +68,7 @@ export function MailList({ emails, isLoading, isFetching, onDelete, isDeleting, 
         </div>
       );
     }
-
+    
     // 状态 2: 正在进行首次加载
     if (isLoading) {
       return (
@@ -126,7 +126,7 @@ export function MailList({ emails, isLoading, isFetching, onDelete, isDeleting, 
   }
 
   return (
-    <div className="rounded-md border border-cyan-50/20 text-white flex flex-col">
+    <div className="rounded-md border border-cyan-50/20 text-white">
       {/* 邮件列表头部 */}
       <div className="w-full rounded-t-md p-2 flex items-center bg-zinc-800 text-zinc-200 gap-2">
         <div className="flex items-center justify-start gap-2 font-bold">
@@ -148,7 +148,7 @@ export function MailList({ emails, isLoading, isFetching, onDelete, isDeleting, 
             </button>
           )}
         </div>
-
+        
         {/* 操作按钮区域 */}
         <div className="ml-auto flex items-center gap-2">
           {/* feat: 详情页模式下的操作按钮 */}
@@ -208,8 +208,8 @@ export function MailList({ emails, isLoading, isFetching, onDelete, isDeleting, 
       </div>
 
       {/* 邮件列表主体 */}
-      {/* fix: 无论是否显示详情，都保持 grids 背景和最小高度，以确保一致性。在列表视图中使用固定高度，在详情视图中使用最小高度以允许内容扩展。 */}
-      <div className={clsx("flex flex-col overflow-y-auto p-2 grids", !selectedEmail ? "h-[488px]" : "min-h-[488px]")}>
+      {/* fix: 当显示详情时，移除 grids 背景和 h-[488px] 的高度限制 */}
+      <div className={clsx("flex flex-col flex-1 overflow-y-auto p-2", !selectedEmail && "grids h-[488px]")}>
         {renderBody()}
       </div>
     </div>
