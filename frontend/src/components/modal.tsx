@@ -1,8 +1,9 @@
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef } from 'react';
-import { useWindowSize } from '../hooks/use-window-size';
+// fix: 将具名导入 { useWindowSize } 更改为默认导入 useWindowSize
+import useWindowSize from '../hooks/use-window-size';
 import Leaflet from './leaflet';
 
-// fix: 将默认导出（export default）改为具名导出（export）
+// 将默认导出（export default）改为具名导出（export）
 export function Modal({
   children,
   showModal,
