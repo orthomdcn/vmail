@@ -24,12 +24,13 @@ interface MailListProps {
   selectedIds: string[];
   setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>;
   isAddressCreated: boolean;
+  onSelectEmail: (email: Email) => void; // 新增 prop，用于处理邮件选择
   // feat: 添加新 props 用于控制查看密码按钮
   showViewPasswordButton: boolean;
   onShowPassword: () => void;
 }
 
-export function MailList({ emails, isLoading, isFetching, onDelete, isDeleting, onRefresh, selectedIds, setSelectedIds, isAddressCreated, showViewPasswordButton, onShowPassword }: MailListProps) {
+export function MailList({ emails, isLoading, isFetching, onDelete, isDeleting, onRefresh, selectedIds, setSelectedIds, isAddressCreated, onSelectEmail, showViewPasswordButton, onShowPassword }: MailListProps) {
   const { t } = useTranslation();
 
   const handleSelect = (id: string) => {
@@ -88,9 +89,9 @@ export function MailList({ emails, isLoading, isFetching, onDelete, isDeleting, 
           checked={selectedIds.includes(email.id)}
           onChange={() => handleSelect(email.id)}
         />
-        <Link
-          to={`/mails/${email.id}`}
-          className="flex-1 flex flex-col items-start gap-2 rounded-lg border border-zinc-600 p-3 text-left text-sm transition-all hover:bg-zinc-700"
+        <div
+          onClick={() => onSelectEmail(email)}
+          className="cursor-pointer flex-1 flex flex-col items-start gap-2 rounded-lg border border-zinc-600 p-3 text-left text-sm transition-all hover:bg-zinc-700"
         >
           <div className="flex w-full flex-col gap-1">
             <div className="flex items-center">
@@ -109,7 +110,7 @@ export function MailList({ emails, isLoading, isFetching, onDelete, isDeleting, 
           <div className="line-clamp-2 text-xs text-zinc-300 font-normal w-full">
             {(email.text || email.html || "").substring(0, 300)}
           </div>
-        </Link>
+        </div>
       </div>
     ));
   }

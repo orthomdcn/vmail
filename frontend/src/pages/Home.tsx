@@ -7,6 +7,7 @@ import Cookies from 'js-cookie';
 import { Toaster, toast } from 'react-hot-toast';
 
 import { MailList } from '../components/MailList.tsx';
+import { MailDetail } from './MailDetail.tsx'; // 导入邮件详情组件
 import { CopyButton } from '../components/CopyButton.tsx';
 // feat: 导入 loginByPassword
 import { getEmails, deleteEmails, loginByPassword, verifyTurnstile } from '../services/api.ts';
@@ -37,6 +38,7 @@ export function Home() {
   const [turnstileToken, setTurnstileToken] = useState<string>('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isTurnstileVerified, setIsTurnstileVerified] = useState(false);
+  const [selectedEmail, setSelectedEmail] = useState<Email | null>(null); // 新增状态，用于存储当前选中的邮件
 
   // feat: 初始化密码模态框
   const { PasswordModal, setShowPasswordModal } = usePasswordModal();
@@ -148,6 +150,7 @@ export function Home() {
     Cookies.remove('userMailbox');
     setAddress(undefined);
     setHasReceivedEmail(false); // 重置状态
+    setSelectedEmail(null); // 清除选中的邮件
     queryClient.invalidateQueries({ queryKey: ['emails'] }); // 清理缓存
   };
 
@@ -157,6 +160,9 @@ export function Home() {
     onSuccess: () => {
       toast.success(t('Emails deleted'));
       setSelectedIds([]); // 清空选择
+      if (selectedEmail && selectedIds.includes(selectedEmail.id)) {
+        setSelectedEmail(null); // 如果删除的邮件是被选中的，则清除
+      }
       queryClient.invalidateQueries({ queryKey: ['emails', address] }); // 刷新列表
     },
     onError: () => {
@@ -198,6 +204,16 @@ export function Home() {
     }
     return null;
   }, [address, config.cookiesSecret]);
+  
+  // 新增：处理邮件选择
+  const handleSelectEmail = (email: Email) => {
+    setSelectedEmail(email);
+  };
+  
+  // 新增：关闭邮件详情
+  const handleCloseDetail = () => {
+    setSelectedEmail(null);
+  };
 
   return (
     <div className="h-full flex flex-col gap-4 md:flex-row justify-center items-start mt-24 mx-6 md:mx-10">
@@ -255,27 +271,32 @@ export function Home() {
         )}
       </div>
 
-      {/* 右侧邮件列表 */}
+      {/* 右侧邮件列表或邮件详情 */}
       <div className="w-full flex-1 overflow-hidden">
-        <MailList
-          isAddressCreated={!!address}
-          emails={emails}
-          isLoading={isLoading}
-          isFetching={isFetching}
-          onDelete={handleDeleteEmails}
-          isDeleting={deleteMutation.isPending}
-          onRefresh={refetch}
-          selectedIds={selectedIds}
-          setSelectedIds={setSelectedIds}
-          // feat: 传递新状态和回调函数
-          showViewPasswordButton={hasReceivedEmail}
-          onShowPassword={() => {
-            const password = getPassword();
-            if (password) {
-                showPasswordToast(password);
-            }
-          }}
-        />
+        {selectedEmail ? (
+          <MailDetail email={selectedEmail} onClose={handleCloseDetail} />
+        ) : (
+          <MailList
+            isAddressCreated={!!address}
+            emails={emails}
+            isLoading={isLoading}
+            isFetching={isFetching}
+            onDelete={handleDeleteEmails}
+            isDeleting={deleteMutation.isPending}
+            onRefresh={refetch}
+            selectedIds={selectedIds}
+            setSelectedIds={setSelectedIds}
+            onSelectEmail={handleSelectEmail} // 传递选择邮件的函数
+            // feat: 传递新状态和回调函数
+            showViewPasswordButton={hasReceivedEmail}
+            onShowPassword={() => {
+              const password = getPassword();
+              if (password) {
+                  showPasswordToast(password);
+              }
+            }}
+          />
+        )}
       </div>
     </div>
   );
