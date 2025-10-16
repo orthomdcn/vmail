@@ -68,14 +68,16 @@ export function Home() {
         >
           <div className="flex-1 w-0 p-4">
             <div className="flex items-start">
-              <div className="flex-shrink-0 pt-0.5">
+              {/* fix: 优化图标垂直居中 */}
+              <div className="flex-shrink-0 pt-0.5 flex items-center h-full">
                 <PasswordIcon className="h-8 w-8 text-cyan-400" />
               </div>
               <div className="ml-3 flex-1">
                 <p className="text-sm font-medium text-gray-100">
                   {t('Save your password and continue using this email in 1 day')}
                 </p>
-                <div className="mt-1 flex items-center text-sm text-gray-300 bg-slate-700 px-2 py-1 rounded">
+                {/* fix: 优化密码自动换行 */}
+                <div className="mt-1 flex items-center text-sm text-gray-300 bg-slate-700 px-2 py-1 rounded break-all">
                   <span className="truncate flex-1 font-mono">{password}</span>
                   <CopyButton text={password} className="p-1" />
                 </div>
