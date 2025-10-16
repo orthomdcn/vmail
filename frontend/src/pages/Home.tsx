@@ -65,7 +65,9 @@ export function Home() {
   const showPasswordToast = useCallback((password: string) => {
     toast(
       (toastInstance) => (
-        <div className="flex-1 w-0 p-4">
+        // 修复：移除 'w-0' 和 'flex-1' 类，以解决宽度为0导致的文字竖排问题。
+        // 'react-hot-toast' 会为弹窗提供默认的宽度，'w-0' 会破坏这个布局。
+        <div className="w-full p-4">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <PasswordIcon className="h-8 w-8 text-cyan-400" />
