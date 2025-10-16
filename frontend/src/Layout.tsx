@@ -15,8 +15,19 @@ export function Layout() {
       {/* Outlet 用于渲染当前路由匹配的子组件 */}
       <Outlet />
       <Footer />
-      {/* 用于显示通知的组件 */}
-      <Toaster />
+      {/* feat: 添加全局 Toast 组件 
+        配置了统一样式，使其与网站风格保持一致，并显示在右下角。
+      */}
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          style: {
+            borderRadius: '8px',
+            background: '#383838',
+            color: '#ffffff',
+          },
+        }}
+      />
     </div>
   );
 }

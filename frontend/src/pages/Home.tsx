@@ -4,7 +4,7 @@ import { Turnstile } from '@marsidev/react-turnstile';
 import randomName from "@scaleway/random-name";
 import { useTranslation } from 'react-i18next';
 import Cookies from 'js-cookie';
-import { Toaster, toast } from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 
 import { MailList } from '../components/MailList.tsx';
 import { CopyButton } from '../components/CopyButton.tsx';
@@ -47,51 +47,50 @@ export function Home() {
   const [hasReceivedEmail, setHasReceivedEmail] = useState(false);
 
   // 使用 React Query 获取邮件列表
+  // refactor: 在 onSucess 中添加手动刷新成功的提示
   const { data: emails = [], isLoading, isFetching, refetch } = useQuery<Email[]>({
     queryKey: ['emails', address],
     queryFn: () => getEmails(address!),
     enabled: !!address, // 只有在 address 存在时才执行查询
     refetchInterval: 20000, // 恢复20秒自动刷新
+    onSuccess: (data) => {
+      // 当手动刷新时，给出提示
+      if (!isLoading && !isFetching) {
+        // fix: 使用 i18n key
+        toast.success(t('Refresh successful'));
+      }
+    },
     onError: (err: Error) => {
+      // refactor: 使用全局 toast 显示错误
       toast.error(`${t("Failed to get emails")}: ${err.message}`, { duration: 5000 });
     },
     retry: false, // 失败后不自动重试
   });
 
-  // feat: 将密码提示封装成一个函数，并用 useCallback 包裹以优化性能。
+  // feat(refactor): 将密码提示重构为使用全局 toast
   const showPasswordToast = useCallback((password: string) => {
-    toast.custom(
-      (toastInstance) => (
-        <div
-          className={`max-w-md w-full bg-slate-800 text-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5 transition-all duration-300 ${
-            toastInstance.visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
-          }`}
-        >
-          <div className="flex-1 w-0 p-4">
-            {/* fix: 将 items-start 改为 items-center 来实现垂直居中 */}
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <PasswordIcon className="h-8 w-8 text-cyan-400" />
-              </div>
-              <div className="ml-3 flex-1">
-                <p className="text-sm font-medium text-gray-100">
-                  {t('Save your password and continue using this email in 1 day')}
-                </p>
-                {/* fix: 移除 truncate 类，并将 break-all 直接应用在 span 上 */}
-                <div className="mt-1 flex items-center text-sm text-gray-300 bg-slate-700 px-2 py-1 rounded">
-                  <span className="flex-1 font-mono break-all">{password}</span>
-                  <CopyButton text={password} className="p-1" />
-                </div>
-                <p className="mt-2 text-xs text-yellow-400">
-                  {t("Remember your password, otherwise your email will expire and cannot be retrieved")}
-                </p>
-              </div>
-            </div>
+    toast(
+      (tInstance) => (
+        <div className="flex items-start">
+          <div className="flex-shrink-0 pt-0.5">
+            <PasswordIcon className="h-8 w-8 text-cyan-400" />
           </div>
-          <div className="flex border-l border-gray-700">
+          <div className="ml-3 flex-1">
+            <p className="text-sm font-medium">
+              {t('Save your password and continue using this email in 1 day')}
+            </p>
+            <div className="mt-1 flex items-center text-sm text-gray-300 bg-slate-700 px-2 py-1 rounded">
+              <span className="flex-1 font-mono break-all">{password}</span>
+              <CopyButton text={password} className="p-1" />
+            </div>
+            <p className="mt-2 text-xs text-yellow-400">
+              {t("Remember your password, otherwise your email will expire and cannot be retrieved")}
+            </p>
+          </div>
+          <div className="flex border-l border-gray-700 ml-4 pl-4">
             <button
-              onClick={() => toast.dismiss(toastInstance.id)}
-              className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-cyan-400 hover:text-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              onClick={() => toast.dismiss(tInstance.id)}
+              className="w-full border border-transparent rounded-none p-2 flex items-center justify-center text-sm font-medium text-cyan-400 hover:text-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-500"
             >
               {t("Close")}
             </button>
@@ -100,7 +99,7 @@ export function Home() {
       ),
       {
         id: 'password-notification', // 防止重复通知
-        duration: 5000, // 5秒后自动关闭
+        duration: Infinity, // 密码提示永不自动关闭
         position: 'top-center',
       }
     );
@@ -114,6 +113,14 @@ export function Home() {
     if (emails.length > 0 && !hasReceivedEmail) {
       setHasReceivedEmail(true);
     }
+    
+    // 当收到第一封邮件时，显示密码提示
+    if (emails.length > 0 && prevEmailsLength.current === 0) {
+        const password = getPassword();
+        if (password) {
+            showPasswordToast(password);
+        }
+    }
 
     // 当用户停止使用邮箱时（地址被清除），重置状态并关闭通知
     if (!address) {
@@ -122,7 +129,7 @@ export function Home() {
     }
 
     prevEmailsLength.current = emails.length;
-  }, [emails, address, hasReceivedEmail]); // 依赖项包含 emails, address 和 hasReceivedEmail 以响应所有相关变化
+  }, [emails, address, hasReceivedEmail, getPassword, showPasswordToast]); // 依赖项包含 emails, address 和 hasReceivedEmail 以响应所有相关变化
 
 
   // 创建新邮箱地址的处理函数
@@ -138,6 +145,8 @@ export function Home() {
       Cookies.set('userMailbox', mailbox, { expires: 1 }); // cookie 有效期1天
       setAddress(mailbox);
       setHasReceivedEmail(false); // 重置接收邮件状态
+      // refactor: 使用全局 toast 显示成功消息, 并使用 i18n key
+      toast.success(t('Email created successfully!'));
     } catch (error) {
       toast.error(t('Failed to verify captcha'));
       console.error("Turnstile verification failed:", error);
@@ -154,9 +163,11 @@ export function Home() {
   };
 
   // 删除邮件的 useMutation hook
+  // refactor: 使用全局 toast 显示删除成功或失败的消息
   const deleteMutation = useMutation({
     mutationFn: (ids: string[]) => deleteEmails(ids),
     onSuccess: () => {
+      // fix: 使用 i18n key
       toast.success(t('Emails deleted'));
       setSelectedIds([]); // 清空选择
       if (selectedEmail && selectedIds.includes(selectedEmail.id)) {
@@ -165,6 +176,7 @@ export function Home() {
       queryClient.invalidateQueries({ queryKey: ['emails', address] }); // 刷新列表
     },
     onError: () => {
+      // fix: 使用 i18n key
       toast.error(t('Deletion failed'));
     }
   });
@@ -172,6 +184,7 @@ export function Home() {
   // 定义 handleDeleteEmails 函数
   const handleDeleteEmails = (ids: string[]) => {
     if (ids.length === 0) {
+      // refactor: 使用全局 toast, 并使用 i18n key
       toast.error(t('Please select emails to delete'));
       return;
     }
@@ -179,7 +192,7 @@ export function Home() {
   };
 
   // feat: 处理密码登录的函数
-  // fix: 移除登录时的 turnstile token 校验逻辑
+  // refactor: 移除登录时的 turnstile token 校验逻辑, 并使用全局 toast
   const handleLogin = async (password: string) => {
     setIsLoggingIn(true);
     try {
@@ -188,8 +201,10 @@ export function Home() {
       Cookies.set('userMailbox', data.address, { expires: 1 });
       setAddress(data.address);
       setShowPasswordModal(false); // 关闭模态框
+      // fix: 使用 i18n key
       toast.success(t("Login successful"));
     } catch (error: any) {
+      // fix: 使用 i18n key
       toast.error(`${t("Login failed")}: ${error.message}`);
     } finally {
       setIsLoggingIn(false);
@@ -216,7 +231,9 @@ export function Home() {
 
   return (
     <div className="h-full flex flex-col gap-4 md:flex-row justify-center items-start mt-24 mx-6 md:mx-10">
-      <Toaster position="top-center" />
+      {/* refactor: 移除 Toaster 组件
+        Toaster 组件已移至 Layout.tsx 中，以实现全局单例。
+      */}
       <PasswordModal onLogin={handleLogin} isLoggingIn={isLoggingIn} />
       <div className="flex flex-col text-white items-start w-full md:w-[350px] mx-auto gap-2">
         {/* 左侧信息面板 */}
