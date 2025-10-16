@@ -12,17 +12,8 @@ keep_vars = true
 binding = "DB"
 database_name = "${D1_DATABASE_NAME}"
 database_id = "${D1_DATABASE_ID}"
-
-# feat: 添加 D1 迁移配置
-# 这个配置告诉 wrangler 在部署时自动运行 `./drizzle` 目录下的迁移文件
-[[migrations]]
-tag = "v1" # 迁移的唯一标识符
-new_classes = ["D1_ERROR"] # 迁移相关的错误类
-# 将迁移应用到名为 "DB" 的 D1 数据库绑定
-binding = "DB"
-# 指定迁移文件所在的目录
-migrations_dir = "drizzle"
-
+# fix: 将迁移目录直接配置在这里，这是 D1 自动迁移的标准做法
+migrations_dir = "worker/drizzle"
 
 # 定义环境变量和密钥
 [vars]
