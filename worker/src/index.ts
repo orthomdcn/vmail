@@ -7,7 +7,7 @@ import { deleteEmails, findEmailById, getEmailByPassword, getEmailsByMessageTo, 
 // fix: 修正数据库导入路径
 import { getD1DB } from '../../packages/database/db';
 import { InsertEmail, insertEmailSchema } from '../../packages/database/schema';
-import { nanoid } from 'nanoid/non-secure';
+import { nanoid } from 'non-secure';
 import PostalMime from 'postal-mime';
 
 // 定义 Cloudflare 绑定和环境变量的类型
@@ -82,20 +82,33 @@ const turnstile = async (c, next) => {
 // API 路由组
 const api = app.basePath('/api');
 
-// 获取邮件列表
-api.post('/emails', turnstile, async (c) => {
+// feat: 新增一个专门用于人机验证的接口。
+// 前端应在生成邮箱地址前先调用此接口。
+api.post('/verify', turnstile, async (c) => {
+  // turnstile 中间件已经完成了验证工作。
+  // 如果代码能执行到这里，说明验证成功。
+  return c.json({ success: true });
+});
+
+// fix: 移除获取邮件列表接口的 turnstile 验证。
+// 这个接口现在是公开的，刷新收件箱时可以直接调用，不再需要重复验证。
+api.post('/emails', async (c) => {
   const db = getD1DB(c.env.DB);
-  // fix: 从上下文中获取已解析的请求体，并进行安全访问
-  const body = c.get('parsedBody');
+  let body: any;
+  try {
+    body = await c.req.json();
+  } catch (e) {
+    return c.json({ message: '错误的请求：请求体无效或为空。' }, 400);
+  }
   const address = body?.address;
 
   if (!address) {
     return c.json({ message: 'address is required' }, 400);
   }
-  // 函数调用修正：使用 getEmailsByMessageTo 函数
   const emails = await getEmailsByMessageTo(db, address as string);
   return c.json(emails);
 });
+
 
 // 获取单封邮件详情
 api.get('/emails/:id', async (c) => {
@@ -109,7 +122,7 @@ api.get('/emails/:id', async (c) => {
   return c.json(email);
 });
 
-// 删除邮件
+// 删除邮件接口仍然保留 turnstile 验证，以防滥用
 api.post('/delete-emails', turnstile, async (c) => {
     const db = getD1DB(c.env.DB);
     // fix: 从上下文中获取已解析的请求体，并进行安全访问
@@ -122,7 +135,7 @@ api.post('/delete-emails', turnstile, async (c) => {
     return c.json(result);
 });
 
-// feat: 添加登录路由
+// 登录接口同样保留 turnstile 验证
 api.post('/login', turnstile, async (c) => {
   const db = getD1DB(c.env.DB);
   // fix: 从上下文中获取已解析的请求体，并进行安全访问
