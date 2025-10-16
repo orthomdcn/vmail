@@ -17,10 +17,9 @@ export function MailDetail({ email, onClose }: MailDetailProps) {
 
   return (
     // refactor: 移除外部的 p-2 gap-10，将其移到 MailList 中控制
-    // feat: 使用 flex-col 和 h-full 让详情页填满父容器
-    <div className="flex flex-1 flex-col text-white h-full">
+    <div className="flex flex-1 flex-col text-white">
       {/* refactor: 移除返回按钮，它现在位于 MailList 的标题栏中 */}
-      <div className="flex items-start mb-4">
+      <div className="flex items-start mb-6">
         <div className="flex items-start gap-4 text-sm">
           <div>
             <UserCircleIcon className="w-6 h-6"/>
@@ -40,12 +39,10 @@ export function MailDetail({ email, onClose }: MailDetailProps) {
         )}
       </div>
       {/* fix: 调整 iframe 的容器和样式，以适应在 MailList 中显示 */}
-      {/* feat: 使用 flex-1 和 min-h-0 确保 iframe 容器能正确填充剩余空间 */}
       <div className="flex-1 flex text-sm bg-[#ffffffd6] backdrop-blur-xl rounded-md min-h-0">
         <iframe
             srcDoc={email.html || `<pre>${email.text}</pre>`}
-            // refactor: 将 h-[60vh] 改为 h-full 以自适应容器
-            className="w-full h-full border-0"
+            className="w-full h-[60vh] border-0"
             sandbox="allow-popups allow-popups-to-escape-sandbox"
             title="Email Content"
           />
