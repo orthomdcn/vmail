@@ -28,21 +28,20 @@ const app = new Hono<{ Bindings: Env }>();
 // 配置 CORS
 app.use('/api/*', cors());
 
-// fix: 修复400错误。重写中间件以更健壮地处理请求体。
-// 此前的实现方式在某些情况下可能无法正确解析JSON请求体，导致后续处理器拿不到必需的 `address` 参数，从而返回400错误。
-// 新的实现方式可以优雅地处理空请求体或非JSON请求体的情况。
+// fix: 增强请求体验证逻辑。
+// 此前的实现方式在请求体解析失败时会静默处理，导致后续处理流程因缺少数据而返回一个模糊的400错误。
+// 新的实现方式会严格校验请求体，如果解析为JSON失败（例如请求体为空或格式错误），将立即返回一个明确的400错误，从而阻止无效请求继续执行。
 const turnstile = async (c, next) => {
-  let body: any = {};
+  let body: any;
   try {
-    // 使用 c.req.json() 来安全地解析请求体。
-    // 如果请求体为空或不是有效的JSON，则会抛出异常。
+    // 尝试将请求体解析为JSON。如果失败，将抛出异常。
     body = await c.req.json();
   } catch (e) {
-    // 在这种情况下，我们忽略错误，因为 token 也可能在 header 中传递。
-    // body 保持为空对象。
-    console.log("无法解析JSON请求体，可能为空或格式错误，将继续检查header中的token。");
+    // 捕获异常，记录错误日志，并返回一个清晰的错误响应。
+    console.error("请求体解析为JSON时出错:", e);
+    return c.json({ message: '错误的请求：请求体无效或为空。' }, 400);
   }
-  
+
   // 将解析后的 body 存入上下文，以便下游处理器直接使用，避免重复解析。
   c.set('parsedBody', body);
 
@@ -50,7 +49,7 @@ const turnstile = async (c, next) => {
   const ip = c.req.header('CF-Connecting-IP');
 
   if (!token) {
-    return c.json({ message: 'token is required' }, 400);
+    return c.json({ message: '缺少 turnstile token' }, 400);
   }
 
   const formData = new FormData();
@@ -70,7 +69,7 @@ const turnstile = async (c, next) => {
   if (!data.success) {
     // feat: 增加详细的错误日志，方便调试
     console.error("Turnstile 验证失败:", data['error-codes']);
-    return c.json({ message: 'token is invalid' }, 400);
+    return c.json({ message: 'token 无效' }, 400);
   }
 
   await next();
@@ -190,3 +189,4 @@ export default {
       await deleteExpiredEmails(db, oneHourAgo);
   },
 };
+
