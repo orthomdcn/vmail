@@ -27,9 +27,21 @@ const app = new Hono<{ Bindings: Env }>();
 // 配置 CORS
 app.use('/api/*', cors());
 
+// fix: 修复重复读取请求体的问题
 // Turnstile (人机验证) 中间件
 const turnstile = async (c, next) => {
-  const body = await c.req.json().catch(() => ({}));
+  let body;
+  try {
+    // 读取一次请求体
+    body = await c.req.json();
+    // 将解析后的 body 存入上下文，供后续中间件或处理器使用
+    c.set('parsedBody', body);
+  } catch (e) {
+    // 如果解析失败，设置一个空对象以避免后续代码出错
+    body = {};
+    c.set('parsedBody', body);
+  }
+
   const token = body.token || c.req.header('cf-turnstile-token');
   const ip = c.req.header('CF-Connecting-IP');
 
@@ -61,7 +73,11 @@ const api = app.basePath('/api');
 // 获取邮件列表
 api.post('/emails', turnstile, async (c) => {
   const db = getD1DB(c.env.DB);
-  const { address } = await c.req.json();
+  // fix: 从上下文中获取已解析的请求体
+  const { address } = c.get('parsedBody');
+  if (!address) {
+    return c.json({ message: 'address is required' }, 400);
+  }
   // 函数调用修正：使用 getEmailsByMessageTo 函数
   const emails = await getEmailsByMessageTo(db, address as string);
   return c.json(emails);
@@ -73,13 +89,17 @@ api.get('/emails/:id', async (c) => {
   const { id } = c.req.param();
   // 函数调用修正：使用 findEmailById 函数
   const email = await findEmailById(db, id);
+  if (!email) {
+    return c.json({ message: 'Email not found'}, 404);
+  }
   return c.json(email);
 });
 
 // 删除邮件
 api.post('/delete-emails', turnstile, async (c) => {
     const db = getD1DB(c.env.DB);
-    const { ids } = await c.req.json();
+    // fix: 从上下文中获取已解析的请求体
+    const { ids } = c.get('parsedBody');
     const result = await deleteEmails(db, ids as string[]);
     return c.json(result);
 });
@@ -87,7 +107,8 @@ api.post('/delete-emails', turnstile, async (c) => {
 // feat: 添加登录路由
 api.post('/login', turnstile, async (c) => {
   const db = getD1DB(c.env.DB);
-  const { password } = await c.req.json();
+  // fix: 从上下文中获取已解析的请求体
+  const { password } = c.get('parsedBody');
   if (!password) {
     return c.json({ message: 'Password is required' }, 400);
   }
