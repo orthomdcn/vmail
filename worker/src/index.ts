@@ -3,7 +3,7 @@ import { serveStatic } from 'hono/cloudflare-workers';
 import { cors } from 'hono/cors';
 // 路径修正：使用相对路径并导入正确的函数
 // feat: 导入 getEmailByPassword 函数
-import { deleteEmails, findEmailById, getEmailByPassword, getEmailsByMessageTo, insertEmail } from '../../packages/database/dao';
+import { deleteEmails, findEmailById, getEmailByPassword, getEmailsByMessageTo, insertEmail, deleteExpiredEmails } from '../../packages/database/dao';
 import { getD1DB } from '../../packages/database/db';
 import { InsertEmail, insertEmailSchema } from '../../packages/database/schema';
 import { nanoid } from 'nanoid/non-secure';
@@ -27,20 +27,25 @@ const app = new Hono<{ Bindings: Env }>();
 // 配置 CORS
 app.use('/api/*', cors());
 
-// fix: 修复重复读取请求体的问题
+// fix: 修复重复读取请求体的问题，并增强健壮性
 // Turnstile (人机验证) 中间件
 const turnstile = async (c, next) => {
-  let body;
+  let body: any = {}; // 默认值为空对象
   try {
-    // 读取一次请求体
-    body = await c.req.json();
-    // 将解析后的 body 存入上下文，供后续中间件或处理器使用
-    c.set('parsedBody', body);
+    // 尝试读取请求体文本。如果请求体为空，.text() 会返回空字符串，不会像 .json() 那样报错。
+    const rawBody = await c.req.text();
+    if (rawBody) {
+      // 如果请求体不为空，则解析为 JSON
+      body = JSON.parse(rawBody);
+    }
   } catch (e) {
-    // 如果解析失败，设置一个空对象以避免后续代码出错
-    body = {};
-    c.set('parsedBody', body);
+    // 如果 JSON.parse 失败，说明请求体不是有效的 JSON
+    // 这种情况我们依然继续，因为 token 可能在 header 中。body 维持为空对象。
+    console.error("无法将请求体解析为 JSON:", e);
   }
+
+  // 将解析后的 body (或空对象) 存入上下文，供后续的处理器使用
+  c.set('parsedBody', body);
 
   const token = body.token || c.req.header('cf-turnstile-token');
   const ip = c.req.header('CF-Connecting-IP');
@@ -61,6 +66,8 @@ const turnstile = async (c, next) => {
 
   const data = await res.json();
   if (!data.success) {
+    // feat: 增加详细的错误日志，方便调试
+    console.error("Turnstile 验证失败:", data['error-codes']);
     return c.json({ message: 'token is invalid' }, 400);
   }
 
@@ -73,8 +80,8 @@ const api = app.basePath('/api');
 // 获取邮件列表
 api.post('/emails', turnstile, async (c) => {
   const db = getD1DB(c.env.DB);
-  // fix: 从上下文中获取已解析的请求体
-  const { address } = c.get('parsedBody');
+  // fix: 从上下文中获取已解析的请求体，并增加健壮性处理
+  const { address } = c.get('parsedBody') || {};
   if (!address) {
     return c.json({ message: 'address is required' }, 400);
   }
@@ -98,8 +105,11 @@ api.get('/emails/:id', async (c) => {
 // 删除邮件
 api.post('/delete-emails', turnstile, async (c) => {
     const db = getD1DB(c.env.DB);
-    // fix: 从上下文中获取已解析的请求体
-    const { ids } = c.get('parsedBody');
+    // fix: 从上下文中获取已解析的请求体，并增加健壮性处理
+    const { ids } = c.get('parsedBody') || {};
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return c.json({ message: 'ids are required' }, 400);
+    }
     const result = await deleteEmails(db, ids as string[]);
     return c.json(result);
 });
@@ -107,8 +117,8 @@ api.post('/delete-emails', turnstile, async (c) => {
 // feat: 添加登录路由
 api.post('/login', turnstile, async (c) => {
   const db = getD1DB(c.env.DB);
-  // fix: 从上下文中获取已解析的请求体
-  const { password } = c.get('parsedBody');
+  // fix: 从上下文中获取已解析的请求体，并增加健壮性处理
+  const { password } = c.get('parsedBody') || {};
   if (!password) {
     return c.json({ message: 'Password is required' }, 400);
   }
@@ -151,7 +161,7 @@ export default {
       const email = insertEmailSchema.parse(newEmail);
       await insertEmail(db, email);
     } catch (e) {
-      console.error('Failed to process email:', e);
+      console.error('处理邮件失败:', e);
     }
   },
 
@@ -169,8 +179,9 @@ export default {
   // 定时任务 (清理过期邮件)
   async scheduled(event, env, ctx) {
       const db = getD1DB(env.DB);
+      // 清理一小时前的邮件
       const oneHourAgo = new Date(Date.now() - 1000 * 60 * 60);
-      // 注意: `deleteExpiredEmails` 是一个假设的函数，您需要在 `database/dao.ts` 中实现它
-      // await deleteExpiredEmails(db, oneHourAgo);
+      await deleteExpiredEmails(db, oneHourAgo);
   },
 };
+
