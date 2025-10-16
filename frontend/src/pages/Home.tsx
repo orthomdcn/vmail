@@ -97,7 +97,11 @@ export function Home() {
           </div>
           <div className="flex border-l border-gray-700">
             <button
-              onClick={() => toast.dismiss(toastInstance.id)}
+              onClick={() => {
+                toast.dismiss(toastInstance.id);
+                // 手动关闭时，也应该显示“查看密码”按钮
+                setShowViewPasswordButton(true);
+              }}
               className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-cyan-400 hover:text-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-500"
             >
               关闭
@@ -109,7 +113,7 @@ export function Home() {
         id: 'password-notification', // 防止重复通知
         duration: 5000, // feat: 5秒后自动关闭
         position: 'top-center', // feat: 移动到上方显示
-        // feat: 当提示框关闭时，显示“查看密码”按钮
+        // feat: 当提示框关闭时（无论是自动还是手动），都显示“查看密码”按钮
         onDismiss: () => setShowViewPasswordButton(true),
       }
     );
