@@ -11,8 +11,8 @@ import { CopyButton } from '../components/CopyButton.tsx';
 // feat: 导入 loginByPassword
 import { getEmails, deleteEmails, loginByPassword, verifyTurnstile } from '../services/api.ts';
 import { useConfig } from '../hooks/useConfig.ts';
-// feat: 导入加密函数
-import { getRandomCharacter, encrypt } from '../lib/utlis.ts';
+// feat: 导入加密和格式化函数
+import { getRandomCharacter, encrypt, formatPassword } from '../lib/utlis.ts';
 
 // feat: 导入密码模态框和相关 hook
 import { usePasswordModal } from '../components/password.tsx';
@@ -37,6 +37,9 @@ export function Home() {
   const [turnstileToken, setTurnstileToken] = useState<string>('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isTurnstileVerified, setIsTurnstileVerified] = useState(false);
+  // feat: 新增多域名状态管理
+  const [domains, setDomains] = useState<string[]>([]);
+  const [selectedDomain, setSelectedDomain] = useState<string>('');
 
   // feat: 初始化密码模态框
   const { PasswordModal, setShowPasswordModal } = usePasswordModal();
@@ -44,6 +47,16 @@ export function Home() {
   
   // feat: 新增状态，用于跟踪当前邮箱地址是否曾经收到过邮件
   const [hasReceivedEmail, setHasReceivedEmail] = useState(false);
+
+  // 在组件加载时解析多域名配置
+  useEffect(() => {
+    if (config.emailDomain) {
+      const domainList = config.emailDomain.split(',').map(d => d.trim());
+      setDomains(domainList);
+      // 默认选择第一个域名
+      setSelectedDomain(domainList[0] || '');
+    }
+  }, [config.emailDomain]);
 
   // 使用 React Query 获取邮件列表
   const { data: emails = [], isLoading, isFetching, refetch } = useQuery<Email[]>({
@@ -55,6 +68,12 @@ export function Home() {
       toast.error(`${t("Failed to get emails")}: ${err.message}`, { duration: 5000 });
     },
     retry: false, // 失败后不自动重试
+    // feat: 在查询成功后检查是否有邮件，以确定是否显示密码按钮
+    onSuccess: (data) => {
+        if (data.length > 0) {
+            setHasReceivedEmail(true);
+        }
+    }
   });
 
   // feat: 将密码提示封装成一个函数，并用 useCallback 包裹以优化性能。
@@ -127,10 +146,14 @@ export function Home() {
       toast.error(t('No captcha response'));
       return;
     }
+    if (!selectedDomain) {
+      toast.error('Please select a domain.'); // 如果没有选择域名，给出提示
+      return;
+    }
     try {
       await verifyTurnstile(turnstileToken);
       setIsTurnstileVerified(true); // 验证通过
-      const mailbox = `${randomName("", getRandomCharacter())}@${config.emailDomain}`;
+      const mailbox = `${randomName("", getRandomCharacter())}@${selectedDomain}`;
       Cookies.set('userMailbox', mailbox, { expires: 1 }); // cookie 有效期1天
       setAddress(mailbox);
       setHasReceivedEmail(false); // 重置接收邮件状态
@@ -182,6 +205,7 @@ export function Home() {
       Cookies.set('userMailbox', data.address, { expires: 1 });
       setAddress(data.address);
       setShowPasswordModal(false); // 关闭模态框
+      setHasReceivedEmail(true); // 登录成功意味着该邮箱肯定收到过邮件
       toast.success(t("Login successful"));
     } catch (error: any) {
       toast.error(`${t("Login failed")}: ${error.message}`);
@@ -193,7 +217,10 @@ export function Home() {
   // feat: 获取密码（基于当前邮箱地址和 COOKIES_SECRET 加密）
   const getPassword = useCallback(() => {
     if (address && config.cookiesSecret) {
-      return encrypt(address, config.cookiesSecret);
+      // 1. 使用完整的邮箱地址进行加密
+      const encryptedHex = encrypt(address, config.cookiesSecret);
+      // 2. 格式化为AAAA-BBBB-...的形式
+      return formatPassword(encryptedHex);
     }
     return null;
   }, [address, config.cookiesSecret]);
@@ -232,6 +259,23 @@ export function Home() {
           </div>
         ) : (
           <div className="w-full md:max-w-[350px]">
+             {/* feat: 域名选择下拉框 */}
+            {domains.length > 1 && (
+              <div className="text-sm relative mb-4">
+                  <div className="mb-3 font-semibold">{t("Domain")}</div>
+                  <select
+                      value={selectedDomain}
+                      onChange={(e) => setSelectedDomain(e.target.value)}
+                      className="w-full p-2.5 rounded-md bg-gray-700 border-gray-600 text-white"
+                  >
+                      {domains.map(domain => (
+                          <option key={domain} value={domain}>
+                              @{domain}
+                          </option>
+                      ))}
+                  </select>
+              </div>
+            )}
             <div className="text-sm relative mb-4">
               <div className="mb-3 font-semibold">{t("Validater")}</div>
               <div className="[&_iframe]:!w-full h-[65px] max-w-[300px] bg-gray-700">
@@ -266,7 +310,7 @@ export function Home() {
           onRefresh={refetch}
           selectedIds={selectedIds}
           setSelectedIds={setSelectedIds}
-          // feat: 传递新状态和回调函数
+          // feat: 只要邮箱收到过邮件（无论是否已删除），就显示密码按钮
           showViewPasswordButton={hasReceivedEmail}
           onShowPassword={() => {
             const password = getPassword();

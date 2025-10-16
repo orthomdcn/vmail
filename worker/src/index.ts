@@ -147,9 +147,16 @@ api.post('/login', turnstile, async (c) => {
   }
 
   try {
-    // 解密密码以获取邮箱地址
-    const address = decrypt(password, c.env.COOKIES_SECRET);
-    // 验证邮箱地址是否存在
+    // 预处理密码：移除所有连字符
+    const processedPassword = password.replace(/-/g, '').toLowerCase();
+    
+    // 解密密码以获取完整的邮箱地址
+    const address = decrypt(processedPassword, c.env.COOKIES_SECRET);
+    if (!address || !address.includes('@')) {
+        throw new Error("Decryption failed or resulted in invalid email address");
+    }
+
+    // 验证邮箱地址是否存在（即是否收到过邮件）
     const emails = await getEmailsByMessageTo(db, address);
     if (emails.length === 0) {
       // 如果该地址从未收到过邮件，则视为无效密码
