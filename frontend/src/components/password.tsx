@@ -1,7 +1,6 @@
 import {
   Dispatch,
   SetStateAction,
-  useCallback,
   useMemo,
   useState,
 } from "react";
@@ -19,6 +18,7 @@ interface PasswordModalProps {
   isLoggingIn: boolean; // feat: 添加状态以在 UI 中反映登录过程
 }
 
+// refactor: 将 PasswordModal 组件作为默认导出
 export default function PasswordModal({
   showPasswordModal,
   setShowPasswordModal,
@@ -94,30 +94,15 @@ export default function PasswordModal({
 }
 
 // 自定义 Hook，用于管理密码模态框的可见性
+// refactor: usePasswordModal 只返回状态和状态设置函数，不再返回组件
 export function usePasswordModal() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-
-  // 使用 useCallback 优化 PasswordModal 组件的创建
-  const PasswordModalCallback = useCallback(
-    ({ onLogin, isLoggingIn }: Omit<PasswordModalProps, 'showPasswordModal' | 'setShowPasswordModal'>) => {
-      return (
-        <PasswordModal
-          showPasswordModal={showPasswordModal}
-          setShowPasswordModal={setShowPasswordModal}
-          onLogin={onLogin}
-          isLoggingIn={isLoggingIn}
-        />
-      );
-    },
-    [showPasswordModal] // 依赖项
-  );
 
   return useMemo(
     () => ({
       showPasswordModal,
       setShowPasswordModal,
-      PasswordModal: PasswordModalCallback
     }),
-    [setShowPasswordModal, PasswordModalCallback, showPasswordModal]
+    [setShowPasswordModal, showPasswordModal]
   );
 }

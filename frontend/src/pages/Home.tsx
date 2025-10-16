@@ -15,7 +15,8 @@ import { useConfig } from '../hooks/useConfig.ts';
 import { getRandomCharacter, encrypt } from '../lib/utlis.ts';
 
 // feat: 导入密码模态框和相关 hook
-import { usePasswordModal } from '../components/password.tsx';
+// refactor: 直接导入 PasswordModal 组件，并从 hook 中获取状态
+import PasswordModal, { usePasswordModal } from '../components/password.tsx';
 import PasswordIcon from '../components/icons/Password.tsx';
 
 // 图标导入
@@ -40,7 +41,8 @@ export function Home() {
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null); // 新增状态，用于存储当前选中的邮件
 
   // feat: 初始化密码模态框
-  const { PasswordModal, setShowPasswordModal } = usePasswordModal();
+  // refactor: 从 usePasswordModal hook 中获取 showPasswordModal 和 setShowPasswordModal
+  const { showPasswordModal, setShowPasswordModal } = usePasswordModal();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   
   // feat: 新增状态，用于跟踪当前邮箱地址是否曾经收到过邮件
@@ -234,7 +236,13 @@ export function Home() {
       {/* refactor: 移除 Toaster 组件
         Toaster 组件已移至 Layout.tsx 中，以实现全局单例。
       */}
-      <PasswordModal onLogin={handleLogin} isLoggingIn={isLoggingIn} />
+      {/* refactor: 直接渲染 PasswordModal，并通过 props 控制其显示 */}
+      <PasswordModal
+        showPasswordModal={showPasswordModal}
+        setShowPasswordModal={setShowPasswordModal}
+        onLogin={handleLogin}
+        isLoggingIn={isLoggingIn}
+      />
       <div className="flex flex-col text-white items-start w-full md:w-[350px] mx-auto gap-2">
         {/* 左侧信息面板 */}
         <div className="w-full mb-4 md:max-w-[350px] shrink-0 group group-hover:before:duration-500 group-hover:after:duration-500 after:duration-500 hover:border-cyan-600 hover:before:[box-shadow:_20px_20px_20px_30px_#a21caf] duration-500 before:duration-500 hover:duration-500 hover:after:-right-8 hover:before:right-12 hover:before:-bottom-8 hover:before:blur origin-left hover:decoration-2 relative bg-neutral-800 h-full border text-left p-4 rounded-lg overflow-hidden border-cyan-50/20 before:absolute before:w-12 before:h-12 before:content[''] before:right-1 before:top-1 before:z-10 before:bg-violet-500 before:rounded-full before:blur-lg  after:absolute after:z-10 after:w-20 after:h-20 after:content['']  after:bg-rose-300 after:right-8 after:top-3 after:rounded-full after:blur-lg">
