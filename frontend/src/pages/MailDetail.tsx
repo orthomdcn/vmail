@@ -39,11 +39,10 @@ export function MailDetail({ email, onClose }: MailDetailProps) {
         )}
       </div>
       {/* fix: 调整 iframe 的容器和样式，以适应在 MailList 中显示 */}
-      {/* 优化：将 iframe 的高度从固定的 60vh 改为 h-full，以填充模态框的剩余空间 */}
       <div className="flex-1 flex text-sm bg-[#ffffffd6] backdrop-blur-xl rounded-md min-h-0">
         <iframe
             srcDoc={email.html || `<pre>${email.text}</pre>`}
-            className="w-full h-full border-0"
+            className="w-full h-[60vh] border-0"
             sandbox="allow-popups allow-popups-to-escape-sandbox"
             title="Email Content"
           />

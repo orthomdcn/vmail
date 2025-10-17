@@ -13,8 +13,7 @@ export function InfoModal({ showModal, setShowModal, title, children }: InfoModa
   return (
     <Modal showModal={showModal} setShowModal={setShowModal}>
       {/* 修复：将背景色从白色更改为网站的深色主题，并调整边框颜色 */}
-      {/* 优化：将 md:max-w-3xl 增加到 md:max-w-6xl，使模态框在桌面端更宽 */}
-      <div className="w-full max-h-[80vh] flex flex-col bg-neutral-800/95 backdrop-blur-xl shadow-xl md:max-w-6xl md:rounded-2xl md:border md:border-cyan-50/20">
+      <div className="w-full max-h-[80vh] flex flex-col bg-neutral-800/95 backdrop-blur-xl shadow-xl md:max-w-3xl md:rounded-2xl md:border md:border-cyan-50/20">
         {/* 修复：创建一个固定的头部，包含标题和关闭按钮，使其不随内容滚动 */}
         <div className="flex-shrink-0 flex items-center justify-center p-4 border-b border-cyan-50/20 relative">
             <h3 className="font-display text-2xl font-bold text-white">{title}</h3>

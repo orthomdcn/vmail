@@ -1,6 +1,4 @@
-import { Dispatch, SetStateAction, useCallback, useEffect, useRef } from 'react';
-// fix: 将具名导入 { useWindowSize } 更改为默认导入 useWindowSize
-import useWindowSize from '../hooks/use-window-size';
+import { useEffect, useRef, ReactNode, Dispatch, SetStateAction } from "react";
 import { AnimatePresence, motion, useAnimation } from "framer-motion";
 
 export default function Leaflet({
@@ -40,8 +38,7 @@ export default function Leaflet({
       <motion.div
         ref={leafletRef}
         key="leaflet"
-        // 修复：将背景色从 bg-white 调整为 bg-neutral-800 以匹配深色主题
-        className="group fixed inset-x-0 bottom-0 z-40 w-screen cursor-grab overflow-y-scroll bg-neutral-800 pb-5 active:cursor-grabbing sm:hidden"
+        className="group fixed inset-x-0 bottom-0 z-40 w-screen cursor-grab overflow-y-scroll bg-white pb-5 active:cursor-grabbing sm:hidden"
         style={{ maxHeight: "95%" }}
         initial={{ y: "100%" }}
         animate={controls}
@@ -53,11 +50,9 @@ export default function Leaflet({
         dragElastic={{ top: 0, bottom: 1 }}
         dragConstraints={{ top: 0, bottom: 0 }}>
         <div
-          // 修复：调整边框颜色以匹配深色主题
-          className={`rounded-t-4xl -mb-1 flex h-7 w-full items-center justify-center border-t border-neutral-700`}>
-          {/* 修复：调整滑块颜色为 bg-gray-500，使其在深色背景下可见 */}
-          <div className="-mr-1 h-1 w-6 rounded-full bg-gray-500 transition-all group-active:rotate-12" />
-          <div className="h-1 w-6 rounded-full bg-gray-500 transition-all group-active:-rotate-12" />
+          className={`rounded-t-4xl -mb-1 flex h-7 w-full items-center justify-center border-t border-gray-200`}>
+          <div className="-mr-1 h-1 w-6 rounded-full bg-gray-300 transition-all group-active:rotate-12" />
+          <div className="h-1 w-6 rounded-full bg-gray-300 transition-all group-active:-rotate-12" />
         </div>
         {children}
       </motion.div>
