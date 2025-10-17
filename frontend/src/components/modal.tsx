@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useCallback, useEffect, useRef, ReactNode } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useRef } from 'react';
 // fix: 将具名导入 { useWindowSize } 更改为默认导入 useWindowSize
 import useWindowSize from '../hooks/use-window-size';
 import Leaflet from './leaflet';
@@ -8,12 +8,10 @@ export function Modal({
   children,
   showModal,
   setShowModal,
-  theme = 'dark', // feat: 添加 theme 属性，默认为 'dark'
 }: {
   children: React.ReactNode;
   showModal: boolean;
   setShowModal: Dispatch<SetStateAction<boolean>>;
-  theme?: 'light' | 'dark'; // feat: 定义 theme 属性类型
 }) {
   const modalRef = useRef<HTMLDivElement>(null);
   const { isMobile } = useWindowSize();
@@ -51,8 +49,7 @@ export function Modal({
   // 同时，添加 showBlur={true} 属性以显示背景遮罩。
   if (isMobile) {
     return showModal ? (
-      // feat: 将 theme 属性传递给 Leaflet 组件
-      <Leaflet setShow={setShowModal} showBlur={true} theme={theme}>
+      <Leaflet setShow={setShowModal} showBlur={true}>
         {children}
       </Leaflet>
     ) : null;
