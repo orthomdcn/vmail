@@ -205,7 +205,8 @@ export function Home() {
       setShowPasswordModal(false); // 关闭模态框
       toast.success(t("Login successful"));
     } catch (error: any) {
-      toast.error(`${t("Login failed")}: ${error.message}`);
+      // fix: 使用 i18n 翻译错误信息
+      toast.error(`${t("Login failed")}: ${t(error.message)}`);
     } finally {
       setIsLoggingIn(false);
     }
