@@ -17,7 +17,7 @@ export function MailDetail({ email, onClose }: MailDetailProps) {
 
   return (
     // refactor: 移除外部的 p-2 gap-10，将其移到 MailList 中控制
-    <div className="flex flex-1 flex-col text-white">
+    <div className="flex flex-1 flex-col text-white h-full">
       {/* refactor: 移除返回按钮，它现在位于 MailList 的标题栏中 */}
       <div className="flex items-start mb-6">
         <div className="flex items-start gap-4 text-sm">

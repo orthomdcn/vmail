@@ -40,7 +40,8 @@ export default function PasswordModal({
   };
 
   return (
-    <Modal showModal={showPasswordModal} setShowModal={setShowPasswordModal}>
+    // feat: 传入 theme="light" 属性，以确保在移动端显示浅色上滑栏
+    <Modal showModal={showPasswordModal} setShowModal={setShowPasswordModal} theme="light">
       <div className="w-full overflow-hidden bg-white/95 backdrop-blur-xl shadow-xl p-4 md:max-w-3xl md:rounded-2xl md:border md:border-gray-200">
         {/* 修复：添加 onPointerDown 事件来阻止拖动事件与点击事件的冲突 */}
         <Close
