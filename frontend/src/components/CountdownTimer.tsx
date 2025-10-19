@@ -17,8 +17,8 @@ const formatTimeUnit = (unit: number): string => {
 export function CountdownTimer({ expiryTimestamp, onExtend }: CountdownTimerProps) {
   const { t } = useTranslation(); // 用于国际化
 
-  // 计算剩余时间的函数
-  const calculateTimeLeft = () => {
+  // 计算剩余时间的函数 (使用 useCallback 避免不必要的重新创建)
+  const calculateTimeLeft = useCallback(() => {
     const difference = expiryTimestamp - Date.now();
     let timeLeft = {
       hours: '00',
@@ -37,10 +37,17 @@ export function CountdownTimer({ expiryTimestamp, onExtend }: CountdownTimerProp
     }
 
     return timeLeft;
-  };
+  // expiryTimestamp 作为依赖项，确保函数在时间戳变化时能获取最新值
+  }, [expiryTimestamp]);
 
   // 使用 useState 来存储剩余时间
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+
+  // fix: 新增 useEffect 钩子，专门监听 expiryTimestamp 变化
+  // 当 expiryTimestamp prop 更新时，立即重新计算并更新 timeLeft 状态
+  useEffect(() => {
+    setTimeLeft(calculateTimeLeft());
+  }, [expiryTimestamp, calculateTimeLeft]); // 添加 calculateTimeLeft 作为依赖项
 
   // 使用 useEffect 来设置定时器，每秒更新剩余时间
   useEffect(() => {
@@ -49,13 +56,16 @@ export function CountdownTimer({ expiryTimestamp, onExtend }: CountdownTimerProp
       return;
     }
 
+    // 每秒调用 calculateTimeLeft 来更新时间
     const timer = setInterval(() => {
       setTimeLeft(calculateTimeLeft());
     }, 1000);
 
-    // 组件卸载时清除定时器
+    // 组件卸载或依赖项变化时清除定时器
     return () => clearInterval(timer);
-  }, [expiryTimestamp, timeLeft.expired]); // 依赖项包含过期时间戳和是否过期状态
+  // 依赖项现在只需要 timeLeft.expired 和 calculateTimeLeft
+  // 因为 calculateTimeLeft 已经依赖于 expiryTimestamp
+  }, [timeLeft.expired, calculateTimeLeft]);
 
   return (
     // feat: 将容器改为 flex-row 并添加按钮
