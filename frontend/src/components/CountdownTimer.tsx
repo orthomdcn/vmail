@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react'; // fix: 导入 useCallback
 import { useTranslation } from 'react-i18next';
 import ClockIcon from './icons/Clock'; // 导入时钟图标
 import RefreshIcon from './icons/RefreshIcon'; // 导入刷新图标
